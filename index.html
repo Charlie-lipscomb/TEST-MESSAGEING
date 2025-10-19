@@ -150,34 +150,6 @@
   import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
   import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
   import { getDatabase, ref, set, push, get, onChildAdded } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
-
-document.getElementById("loginBtn").onclick = async () => {
-  const email = document.getElementById("email").value.trim();
-  const password = document.getElementById("password").value.trim();
-  const username = document.getElementById("username").value.trim();
-  if (!email || !password) return alert("Enter email and password");
-
-  try {
-    // Try login first
-    const cred = await signInWithEmailAndPassword(auth, email, password);
-    currentUser = cred.user;
-  } catch (loginErr) {
-    // If login fails, check if username is provided to create account
-    if (!username) return alert("User not found. Provide a username to sign up.");
-    try {
-      const cred = await createUserWithEmailAndPassword(auth, email, password);
-      currentUser = cred.user;
-      // Save username in database
-      await set(ref(db, "users/" + currentUser.uid), { username, email });
-      alert("Account created!");
-    } catch (signupErr) {
-      alert("Error creating account: " + signupErr.message);
-    }
-  }
-};
-
-};
-
 const firebaseConfig = {
   apiKey: "AIzaSyCEdtncZpDgOSnULIjopee7GKh9h9hveKk",
   authDomain: "messagingapp-7ede5.firebaseapp.com",
