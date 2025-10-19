@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Whisp</title>
 <style>
 html, body {margin:0;padding:0;height:100%;background:#e8f0fe;font-family:"Segoe UI", Roboto, sans-serif;}
@@ -18,7 +18,7 @@ main {height:100%;display:flex;flex-direction:column;}
 #loginBtn{background:#4285f4;color:white;border:none;padding:10px 20px;border-radius:8px;cursor:pointer;font-weight:600;box-shadow:0 2px 5px rgba(0,0,0,0.2);}
 
 /* Chat List */
-#chatListScreen{background:#fff;flex:1;}
+#chatListScreen{background:#fff;flex:1;display:flex;flex-direction:column;}
 #chatListHeader{background:#1a73e8;color:white;padding:14px;display:flex;justify-content:space-between;align-items:center;font-weight:600;}
 #chatList{flex:1;overflow-y:auto;padding-bottom:70px;}
 .chatItem{padding:14px;border-bottom:1px solid #eee;cursor:pointer;}
@@ -124,6 +124,7 @@ let currentUser=null, currentChatId=null, replyTo=null, currentListenerRef=null;
 
 const show=(s)=>{[loginScreen,chatListScreen,chatScreen].forEach(e=>e.classList.remove("active"));s.classList.add("active");};
 
+// LOGIN / REGISTER
 document.getElementById("loginBtn").onclick=async()=>{
   const email=document.getElementById("email").value.trim();
   const password=document.getElementById("password").value.trim();
@@ -139,17 +140,20 @@ document.getElementById("loginBtn").onclick=async()=>{
   }
 };
 
+// AUTH STATE
 onAuthStateChanged(auth,async user=>{
-  if(user){currentUser=user;loadChats();show(chatListScreen);}else{show(loginScreen);}
+  if(user){currentUser=user; loadChats(); show(chatListScreen);}
+  else{show(loginScreen);}
 });
 
+// LOAD CHATS
 async function loadChats(){
   chatList.innerHTML="";
-  const chats=await get(ref(db,"chats"));
-  if(chats.exists()){
-    chats.forEach(c=>{
-      const chat=c.val();
-      if(chat.members&&chat.members.includes(currentUser.uid)){
+  const chatsSnap = await get(ref(db,"chats"));
+  if(chatsSnap.exists()){
+    chatsSnap.forEach(c=>{
+      const chat = c.val();
+      if(chat.members && chat.members.includes(currentUser.uid)){
         const div=document.createElement("div");
         div.className="chatItem";
         div.textContent=chat.name;
@@ -160,18 +164,20 @@ async function loadChats(){
   }
 }
 
-async function openChat(id,name){
-  currentChatId=id;
+// OPEN CHAT
+async function openChat(chatId,name){
+  currentChatId=chatId;
   document.getElementById("chatName").textContent=name;
   messagesDiv.innerHTML="";
   show(chatScreen);
-  inputBar.style.display="flex"; // show input bar
+  inputBar.style.display="flex";
   if(currentListenerRef){ off(currentListenerRef); }
-  const msgRef=ref(db,"chats/"+id+"/messages");
+  const msgRef=ref(db,"chats/"+chatId+"/messages");
   currentListenerRef=msgRef;
   onChildAdded(msgRef,s=>renderMessage(s.val()));
 }
 
+// RENDER MESSAGE
 function renderMessage(m){
   const div=document.createElement("div");
   div.classList.add("msg",m.sender===currentUser.uid?"me":"them");
@@ -182,78 +188,90 @@ function renderMessage(m){
   messagesDiv.append(div);
   messagesDiv.scrollTop=messagesDiv.scrollHeight;
 
+  // Swipe to reply
   div.addEventListener("touchstart",e=>div.startX=e.touches[0].clientX);
   div.addEventListener("touchmove",e=>{
-    const diff=e.touches[0].clientX-div.startX;
-    if(diff>70)showReplyBar(m.text);
+    const diff = e.touches[0].clientX - div.startX;
+    if(diff>70) showReplyBar(m.text);
   });
   div.onclick=()=>showReplyBar(m.text);
 
   if(m.sender!==currentUser.uid) showNotification("New message",m.text);
 }
 
+// REPLY BAR
 function showReplyBar(text){
   replyTo=text;
   replyBar.style.display="flex";
   replyText.textContent="Replying to: "+text.slice(0,40);
 }
+cancelReplyBtn.onclick=()=>{replyTo=null; replyBar.style.display="none";};
 
-cancelReplyBtn.onclick=()=>{
-  replyTo=null;
-  replyBar.style.display="none";
-};
-
+// SEND MESSAGE
 document.getElementById("sendBtn").onclick=async()=>{
   const text=messageInput.value.trim();
-  if(!text||!currentChatId)return;
-  await push(ref(db,"chats/"+currentChatId+"/messages"),{sender:currentUser.uid,text,replyTo,time:Date.now()});
-  messageInput.value="";
-  replyTo=null;
-  replyBar.style.display="none";
+  if(!text||!currentChatId) return;
+  await push(ref(db,`chats/${currentChatId}/messages`),{sender:currentUser.uid,text,replyTo,time:Date.now()});
+  messageInput.value=""; replyTo=null; replyBar.style.display="none";
 };
 
+// BACK BUTTON
 document.getElementById("backBtn").onclick=()=>{
   currentChatId=null;
   if(currentListenerRef){off(currentListenerRef);}
   show(chatListScreen);
-  inputBar.style.display="none"; // hide input bar
-};
-
-document.getElementById("logoutBtn").onclick=async()=>{
-  await signOut(auth);
-  currentUser=null;
-  show(loginScreen);
   inputBar.style.display="none";
 };
 
+// LOGOUT
+document.getElementById("logoutBtn").onclick=async()=>{
+  await signOut(auth); currentUser=null; show(loginScreen); inputBar.style.display="none";
+};
+
+// DM BUTTON
+document.getElementById("dmBtn").onclick=async()=>{
+  const uname=prompt("Username to DM:");
+  if(!uname) return;
+  const usersSnap=await get(ref(db,"users"));
+  let target=null;
+  usersSnap.forEach(u=>{if(u.val().username===uname) target={uid:u.key,username:uname}});
+  if(!target) return alert("User not found.");
+
+  const chatsSnap=await get(ref(db,"chats"));
+  let chatId=null;
+  if(chatsSnap.exists()){
+    chatsSnap.forEach(c=>{
+      const chat=c.val();
+      if(!chat.isGroup && chat.members.includes(currentUser.uid) && chat.members.includes(target.uid)) chatId=c.key;
+    });
+  }
+  if(!chatId){
+    const refNew=push(ref(db,"chats"));
+    await set(refNew,{name:target.username,isGroup:false,members:[currentUser.uid,target.uid]});
+    chatId=refNew.key;
+  }
+  openChat(chatId,target.username);
+};
+
+// GROUP BUTTON
 document.getElementById("groupBtn").onclick=async()=>{
-  const name=prompt("Group name:");if(!name)return;
-  const input=prompt("Enter usernames (comma-separated):");
-  const usernames=input?input.split(",").map(u=>u.trim()):[];
+  const name=prompt("Group name:");
+  if(!name) return;
+  const usernames=prompt("Usernames (comma-separated):");
+  const usersArray=usernames?usernames.split(",").map(u=>u.trim()):[];
   const usersSnap=await get(ref(db,"users"));
   const memberIds=[currentUser.uid];
-  usersSnap.forEach(u=>{const val=u.val();if(usernames.includes(val.username))memberIds.push(u.key);});
+  usersSnap.forEach(u=>{if(usersArray.includes(u.val().username)) memberIds.push(u.key);});
   const refNew=push(ref(db,"chats"));
   await set(refNew,{name,isGroup:true,members:memberIds});
   loadChats();
 };
 
-document.getElementById("dmBtn").onclick=async()=>{
-  const uname=prompt("Username to DM:");
-  const users=await get(ref(db,"users"));
-  let uid=null;
-  users.forEach(u=>{if(u.val().username===uname)uid=u.key;});
-  if(!uid)return alert("User not found.");
-  const refNew=push(ref(db,"chats"));
-  await set(refNew,{name:uname,isGroup:false,members:[currentUser.uid,uid]});
-  loadChats();
-};
-
-// Help Button
+// HELP BUTTON
 document.getElementById("helpBtn").onclick=async()=>{
   const usersSnap = await get(ref(db,"users"));
   let helpUser=null;
-  usersSnap.forEach(u=>{if(u.val().username==="Whisp_Management") helpUser={uid:u.key,username:u.val().username}});
+  usersSnap.forEach(u=>{if(u.val().username==="Whisp_Management") helpUser={uid:u.key,username:"Whisp_Management"}});
   if(!helpUser){
     const newHelpRef=push(ref(db,"users"));
     await set(newHelpRef,{username:"Whisp_Management",email:"whisp@support.com"});
@@ -265,7 +283,7 @@ document.getElementById("helpBtn").onclick=async()=>{
   if(chatsSnap.exists()){
     chatsSnap.forEach(c=>{
       const chat=c.val();
-      if(!c.val().isGroup && c.val().members.includes(currentUser.uid) && c.val().members.includes(helpUser.uid)) chatId=c.key;
+      if(!chat.isGroup && chat.members.includes(currentUser.uid) && chat.members.includes(helpUser.uid)) chatId=c.key;
     });
   }
   if(!chatId){
@@ -275,15 +293,21 @@ document.getElementById("helpBtn").onclick=async()=>{
   }
 
   openChat(chatId,"Help");
-  const sendHandler=async()=>{
-    await push(ref(db,"chats/"+chatId+"/messages"),{sender:currentUser.uid,text:"Hello, I need help!",time:Date.now()});
-    await push(ref(db,"chats/"+chatId+"/messages"),{sender:helpUser.uid,text:"Thank you for messaging Whisp Management. We will respond as soon as possible.",time:Date.now()});
+
+  // Send button works normally; automated reply added on send
+  const originalSend = document.getElementById("sendBtn").onclick;
+  document.getElementById("sendBtn").onclick=async()=>{
+    const text=messageInput.value.trim();
+    if(!text) return;
+    await push(ref(db,`chats/${chatId}/messages`),{sender:currentUser.uid,text,time:Date.now()});
     messageInput.value="";
+    replyTo=null;
+    replyBar.style.display="none";
+    await push(ref(db,`chats/${chatId}/messages`),{sender:helpUser.uid,text:"Thank you for messaging Whisp Management. We will respond to your message as soon as possible.",time:Date.now()});
   };
-  document.getElementById("sendBtn").onclick=sendHandler;
 };
 
-// Notifications
+// NOTIFICATIONS
 function showNotification(title,body){
   if(Notification.permission==="granted") new Notification(title,{body});
   else if(Notification.permission!=="denied") Notification.requestPermission();
