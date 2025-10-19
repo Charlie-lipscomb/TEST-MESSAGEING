@@ -3,52 +3,42 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Whisp</title>
+<title>Chat App</title>
 <style>
-  html, body { margin:0; padding:0; height:100%; background:#cce7ff; font-family: system-ui, sans-serif; }
-  main { height:100%; display:flex; flex-direction:column; }
-  .screen { display:none; flex-direction:column; height:100%; }
-  .screen.active { display:flex; }
-
-  /* LOGIN SCREEN */
-  #loginScreen { justify-content:center; align-items:center; background:#075e54; color:white; text-align:center; padding:20px; }
-  #loginScreen input { display:block; width:80%; margin:8px auto; padding:10px; border-radius:8px; border:none; font-size:1rem; }
-  #loginBtn { background:#70b7ff; color:white; border:none; padding:10px 20px; border-radius:8px; cursor:pointer; font-weight:600; margin-top:5px; }
-
-  /* CHAT LIST SCREEN */
-  #chatListScreen { background:#cce7ff; flex:1; }
-  #chatListHeader { background:#70b7ff; color:white; padding:14px; display:flex; justify-content:space-between; align-items:center; font-weight:600; }
-  #chatList { flex:1; overflow-y:auto; padding-bottom:70px; }
-  .chatItem { padding:14px; border-bottom:1px solid #a0d4ff; cursor:pointer; border-radius:6px; margin:4px; background:white; }
-  .chatItem:hover { background:#e0f0ff; }
-
-  /* BOTTOM MENU */
-  #bottomMenu { display:flex; justify-content:space-around; align-items:center; position:fixed; bottom:0; left:0; width:100%; background:#70b7ff; padding:10px 0; }
-  #bottomMenu button { background:#d0f0ff; border:none; color:#075e54; padding:8px 16px; border-radius:8px; font-weight:600; cursor:pointer; }
-
-  /* CHAT SCREEN */
-  #chatScreen { background:#cce7ff; display:flex; flex-direction:column; height:100%; }
-  #chatHeader { background:#70b7ff; color:white; padding:12px; display:flex; justify-content:space-between; align-items:center; }
-  #chatHeader button { background:none; border:none; color:white; font-size:1rem; cursor:pointer; }
-  #messages { flex:1; overflow-y:auto; padding:10px; display:flex; flex-direction:column; }
-  .msg { max-width:80%; margin-bottom:10px; padding:8px 12px; border-radius:10px; position:relative; word-wrap:break-word; }
-  .me { align-self:flex-end; background:#d0f0ff; }
-  .them { align-self:flex-start; background:white; }
-  .timestamp { font-size:0.75rem; color:#555; text-align:right; margin-top:2px; }
-  #replyBar { display:none; background:#e0f4ff; padding:6px 10px; border-left:4px solid #70b7ff; font-size:0.9rem; }
-  #inputBar { display:flex; align-items:center; background:white; padding:8px; border-top:1px solid #70b7ff; }
-  #message { flex:1; padding:10px; border-radius:20px; border:1px solid #70b7ff; outline:none; }
-  #sendBtn { background:#075e54; color:white; border:none; border-radius:50%; width:42px; height:42px; margin-left:8px; font-size:1.2rem; cursor:pointer; }
-
-  @media (min-width:700px) { main { max-width:600px; margin:auto; border-radius:10px; overflow:hidden; } #bottomMenu { position:static; border-top:1px solid #ccc; } }
+  html, body {margin:0;padding:0;height:100%;background:#ece5dd;font-family:system-ui,sans-serif;}
+  main {height:100%;display:flex;flex-direction:column;}
+  .screen{display:none;flex-direction:column;height:100%;}
+  .screen.active{display:flex;}
+  #loginScreen{justify-content:center;align-items:center;background:#075e54;color:white;text-align:center;padding:20px;}
+  #loginScreen input{display:block;width:80%;margin:8px auto;padding:10px;border-radius:8px;border:none;font-size:1rem;}
+  #loginBtn{background:#25d366;color:white;border:none;padding:10px 20px;border-radius:8px;cursor:pointer;font-weight:600;}
+  #chatListScreen{background:#fff;flex:1;}
+  #chatListHeader{background:#075e54;color:white;padding:14px;display:flex;justify-content:space-between;align-items:center;font-weight:600;}
+  #chatList{flex:1;overflow-y:auto;padding-bottom:70px;}
+  .chatItem{padding:14px;border-bottom:1px solid #eee;cursor:pointer;}
+  .chatItem:hover{background:#f9f9f9;}
+  #bottomMenu{display:flex;justify-content:space-around;align-items:center;position:fixed;bottom:0;left:0;width:100%;background:#075e54;padding:10px 0;}
+  #bottomMenu button{background:#25d366;border:none;color:white;padding:8px 16px;border-radius:8px;font-weight:600;cursor:pointer;}
+  #chatScreen{background:#ece5dd;}
+  #chatHeader{background:#075e54;color:white;padding:12px;display:flex;justify-content:space-between;align-items:center;}
+  #chatHeader button{background:none;border:none;color:white;font-size:1rem;cursor:pointer;}
+  #messages{flex:1;overflow-y:auto;padding:10px;display:flex;flex-direction:column;}
+  .msg{max-width:80%;margin-bottom:10px;padding:8px 12px;border-radius:10px;position:relative;word-wrap:break-word;}
+  .me{align-self:flex-end;background:#dcf8c6;}
+  .them{align-self:flex-start;background:#fff;}
+  .timestamp{font-size:0.75rem;color:#666;text-align:right;margin-top:2px;}
+  #replyBar{display:none;background:#f0f0f0;padding:6px 10px;border-left:4px solid #25d366;font-size:0.9rem;}
+  #inputBar{display:flex;align-items:center;background:#fff;padding:8px;border-top:1px solid #ccc;}
+  #message{flex:1;padding:10px;border-radius:20px;border:1px solid #ccc;outline:none;}
+  #sendBtn{background:#128c7e;color:white;border:none;border-radius:50%;width:42px;height:42px;margin-left:8px;font-size:1.2rem;cursor:pointer;}
+  @media (min-width:700px){main{max-width:600px;margin:auto;border-radius:10px;overflow:hidden;}#bottomMenu{position:static;border-top:1px solid #ccc;}}
 </style>
 </head>
 <body>
 <main>
-  <!-- LOGIN SCREEN -->
   <section id="loginScreen" class="screen active">
     <div>
-      <h2>Whisp Chat Login</h2>
+      <h2>Chat Login</h2>
       <input id="email" placeholder="Email" />
       <input id="password" type="password" placeholder="Password" />
       <input id="username" placeholder="Username (for signup)" />
@@ -56,19 +46,16 @@
     </div>
   </section>
 
-  <!-- CHAT LIST SCREEN -->
   <section id="chatListScreen" class="screen">
-    <div id="chatListHeader">Your Chats - Whisp</div>
+    <div id="chatListHeader">Your Chats</div>
     <div id="chatList"></div>
     <div id="bottomMenu">
       <button id="dmBtn">DM</button>
       <button id="groupBtn">Group</button>
-      <button id="helpBtn">Help</button>
       <button id="logoutBtn">Logout</button>
     </div>
   </section>
 
-  <!-- CHAT SCREEN -->
   <section id="chatScreen" class="screen">
     <div id="chatHeader">
       <button id="backBtn">←</button>
@@ -84,171 +71,151 @@
 </main>
 
 <script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
-import { getDatabase, ref, set, push, get, onChildAdded } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+  import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+  import { getDatabase, ref, set, push, get, onChildAdded, off } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
 
-const firebaseConfig = {
-  apiKey: "AIzaSyCEdtncZpDgOSnULIjopee7GKh9h9hveKk",
-  authDomain: "messagingapp-7ede5.firebaseapp.com",
-  databaseURL: "https://messagingapp-7ede5-default-rtdb.firebaseio.com",
-  projectId: "messagingapp-7ede5",
-  storageBucket: "messagingapp-7ede5.firebasestorage.app",
-  messagingSenderId: "221896974865",
-  appId: "1:221896974865:web:3faca4885e48ee656907b0"
-};
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getDatabase(app);
+  const firebaseConfig = {
+    apiKey: "YOUR_API_KEY",
+    authDomain: "YOUR_AUTH_DOMAIN",
+    databaseURL: "YOUR_DB_URL",
+    projectId: "YOUR_PROJECT_ID",
+    storageBucket: "YOUR_STORAGE_BUCKET",
+    messagingSenderId: "YOUR_SENDER_ID",
+    appId: "YOUR_APP_ID"
+  };
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getDatabase(app);
 
-const loginScreen = document.getElementById("loginScreen");
-const chatListScreen = document.getElementById("chatListScreen");
-const chatScreen = document.getElementById("chatScreen");
-const chatList = document.getElementById("chatList");
-const messagesDiv = document.getElementById("messages");
-const replyBar = document.getElementById("replyBar");
-const messageInput = document.getElementById("message");
-const helpBtn = document.getElementById("helpBtn");
+  const loginScreen=document.getElementById("loginScreen"),
+        chatListScreen=document.getElementById("chatListScreen"),
+        chatScreen=document.getElementById("chatScreen"),
+        chatList=document.getElementById("chatList"),
+        messagesDiv=document.getElementById("messages"),
+        replyBar=document.getElementById("replyBar"),
+        messageInput=document.getElementById("message");
 
-let currentUser=null, currentChatId=null, replyTo=null;
+  let currentUser=null, currentChatId=null, replyTo=null, currentListenerRef=null;
 
-const show = s => { [loginScreen, chatListScreen, chatScreen].forEach(e=>e.classList.remove("active")); s.classList.add("active"); };
+  const show=(s)=>{[loginScreen,chatListScreen,chatScreen].forEach(e=>e.classList.remove("active"));s.classList.add("active");};
 
-// LOGIN / REGISTER
-document.getElementById("loginBtn").onclick = async () => {
-  const email=document.getElementById("email").value.trim();
-  const password=document.getElementById("password").value.trim();
-  const username=document.getElementById("username").value.trim();
-  if(!email||!password) return alert("Enter credentials.");
-  try{
-    const cred=await signInWithEmailAndPassword(auth,email,password);
-    currentUser=cred.user;
-  }catch{
-    const cred=await createUserWithEmailAndPassword(auth,email,password);
-    currentUser=cred.user;
-    await set(ref(db,"users/"+currentUser.uid),{username,email});
+  document.getElementById("loginBtn").onclick=async()=>{
+    const email=document.getElementById("email").value.trim();
+    const password=document.getElementById("password").value.trim();
+    const username=document.getElementById("username").value.trim();
+    if(!email||!password)return alert("Enter credentials.");
+    try{
+      const cred=await signInWithEmailAndPassword(auth,email,password);
+      currentUser=cred.user;
+    }catch{
+      const cred=await createUserWithEmailAndPassword(auth,email,password);
+      currentUser=cred.user;
+      await set(ref(db,"users/"+currentUser.uid),{username,email});
+    }
+  };
+
+  onAuthStateChanged(auth,async user=>{
+    if(user){currentUser=user;loadChats();show(chatListScreen);}else{show(loginScreen);}
+  });
+
+  async function loadChats(){
+    chatList.innerHTML="";
+    const chats=await get(ref(db,"chats"));
+    if(chats.exists()){
+      chats.forEach(c=>{
+        const chat=c.val();
+        if(chat.members&&chat.members.includes(currentUser.uid)){
+          const div=document.createElement("div");
+          div.className="chatItem";
+          div.textContent=chat.name;
+          div.onclick=()=>openChat(c.key,chat.name);
+          chatList.append(div);
+        }
+      });
+    }
   }
-};
 
-// AUTH STATE
-onAuthStateChanged(auth, async user=>{
-  if(user){
-    currentUser=user;
-    helpBtn.style.display="inline-block";
+  async function openChat(id,name){
+    currentChatId=id;
+    document.getElementById("chatName").textContent=name;
+    messagesDiv.innerHTML="";
+    show(chatScreen);
+
+    // 🔧 Remove old listener if exists
+    if(currentListenerRef){ off(currentListenerRef); }
+
+    const msgRef=ref(db,"chats/"+id+"/messages");
+    currentListenerRef=msgRef;
+
+    onChildAdded(msgRef,s=>renderMessage(s.val()));
+  }
+
+  function renderMessage(m){
+    const div=document.createElement("div");
+    div.classList.add("msg",m.sender===currentUser.uid?"me":"them");
+    div.innerHTML=`
+      ${m.replyTo?`<div style="font-size:0.85rem;color:#555;border-left:3px solid #25d366;padding-left:6px;margin-bottom:3px;">${m.replyTo}</div>`:""}
+      ${m.text}
+      <div class="timestamp">${new Date(m.time).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}</div>`;
+    messagesDiv.append(div);
+    messagesDiv.scrollTop=messagesDiv.scrollHeight;
+    div.addEventListener("touchstart",e=>div.startX=e.touches[0].clientX);
+    div.addEventListener("touchmove",e=>{
+      const diff=e.touches[0].clientX-div.startX;
+      if(diff>70)showReplyBar(m.text);
+    });
+    div.onclick=()=>showReplyBar(m.text);
+    if(m.sender!==currentUser.uid){showNotification("New message",m.text);}
+  }
+
+  function showReplyBar(text){replyTo=text;replyBar.style.display="block";replyBar.textContent="Replying to: "+text.slice(0,40);}
+
+  document.getElementById("sendBtn").onclick=async()=>{
+    const text=messageInput.value.trim();
+    if(!text||!currentChatId)return;
+    await push(ref(db,"chats/"+currentChatId+"/messages"),{sender:currentUser.uid,text,replyTo,time:Date.now()});
+    messageInput.value="";replyBar.style.display="none";replyTo=null;
+  };
+
+  document.getElementById("backBtn").onclick=()=>{currentChatId=null;if(currentListenerRef){off(currentListenerRef);}show(chatListScreen);};
+  document.getElementById("logoutBtn").onclick=async()=>{await signOut(auth);currentUser=null;show(loginScreen);};
+
+  document.getElementById("groupBtn").onclick=async()=>{
+    const name=prompt("Group name:");if(!name)return;
+    const input=prompt("Enter usernames (comma-separated):");
+    const usernames=input?input.split(",").map(u=>u.trim()):[];
+    const usersSnap=await get(ref(db,"users"));
+    const memberIds=[currentUser.uid];
+    usersSnap.forEach(u=>{const val=u.val();if(usernames.includes(val.username))memberIds.push(u.key);});
+    const refNew=push(ref(db,"chats"));
+    await set(refNew,{name,isGroup:true,members:memberIds});
     loadChats();
-    show(chatListScreen);
-  } else {
-    helpBtn.style.display="none";
-    show(loginScreen);
-  }
-});
+  };
 
-// LOAD CHATS
-async function loadChats(){
-  chatList.innerHTML="";
-  const chats=await get(ref(db,"chats"));
-  if(chats.exists()){
-    chats.forEach(c=>{
-      const chat=c.val();
-      if(chat.members && chat.members.includes(currentUser.uid)){
-        const div=document.createElement("div");
-        div.className="chatItem";
-        div.textContent=chat.name;
-        div.onclick=()=>openChat(c.key, chat.name);
-        chatList.append(div);
-      }
+  document.getElementById("dmBtn").onclick=async()=>{
+    const uname=prompt("Username to DM:");
+    const users=await get(ref(db,"users"));
+    let uid=null;
+    users.forEach(u=>{if(u.val().username===uname)uid=u.key;});
+    if(!uid)return alert("User not found.");
+    const refNew=push(ref(db,"chats"));
+    await set(refNew,{name:uname,isGroup:false,members:[currentUser.uid,uid]});
+    loadChats();
+  };
+
+  // ✅ Service worker notifications
+  if("serviceWorker"in navigator){
+    navigator.serviceWorker.register("sw.js").then(()=>{
+      Notification.requestPermission();
     });
   }
-}
-
-// OPEN CHAT
-async function openChat(id,name){
-  currentChatId=id;
-  messagesDiv.innerHTML="";
-  document.getElementById("chatName").textContent=name;
-  show(chatScreen);
-  const msgRef=ref(db,"chats/"+id+"/messages");
-  onChildAdded(msgRef,s=>renderMessage(s.val()));
-}
-
-function renderMessage(m){
-  const div=document.createElement("div");
-  div.classList.add("msg", m.sender===currentUser.uid?"me":"them");
-  div.innerHTML=`
-    ${m.replyTo?`<div style="font-size:0.85rem;color:#555;border-left:3px solid #70b7ff;padding-left:6px;margin-bottom:3px;">${m.replyTo}</div>`:""}
-    ${m.text}
-    <div class="timestamp">${new Date(m.time).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}</div>`;
-  messagesDiv.append(div);
-  messagesDiv.scrollTop=messagesDiv.scrollHeight;
-  div.addEventListener("touchstart", e=>div.startX=e.touches[0].clientX);
-  div.addEventListener("touchmove", e=>{ if(e.touches[0].clientX-div.startX>70) showReplyBar(m.text); });
-  div.onclick=()=>showReplyBar(m.text);
-}
-
-function showReplyBar(text){ replyTo=text; replyBar.style.display="block"; replyBar.textContent="Replying to: "+text.slice(0,40); }
-
-// SEND MESSAGE
-document.getElementById("sendBtn").onclick=async()=>{
-  const text=messageInput.value.trim();
-  if(!text||!currentChatId)return;
-  await push(ref(db,"chats/"+currentChatId+"/messages"),{sender:currentUser.uid,text,replyTo,time:Date.now()});
-  messageInput.value=""; replyBar.style.display="none"; replyTo=null;
-};
-
-// NAVIGATION
-document.getElementById("backBtn").onclick=()=>{ currentChatId=null; show(chatListScreen); };
-document.getElementById("logoutBtn").onclick=async()=>{ await signOut(auth); currentUser=null; show(loginScreen); };
-
-// GROUP CHAT
-document.getElementById("groupBtn").onclick=async()=>{
-  const name=prompt("Group name:"); if(!name)return;
-  const input=prompt("Enter usernames (comma-separated):");
-  const usernames=input?input.split(",").map(u=>u.trim()):[];
-  const usersSnap=await get(ref(db,"users"));
-  const memberIds=[currentUser.uid];
-  usersSnap.forEach(u=>{ const val=u.val(); if(usernames.includes(val.username))memberIds.push(u.key); });
-  const refNew=push(ref(db,"chats"));
-  await set(refNew,{name,isGroup:true,members:memberIds});
-  loadChats();
-};
-
-// DIRECT MESSAGE
-document.getElementById("dmBtn").onclick=async()=>{
-  const uname=prompt("Username to DM:");
-  const users=await get(ref(db,"users"));
-  let uid=null; users.forEach(u=>{ if(u.val().username===uname)uid=u.key; });
-  if(!uid)return alert("User not found.");
-  const refNew=push(ref(db,"chats"));
-  await set(refNew,{name:uname,isGroup:false,members:[currentUser.uid,uid]});
-  loadChats();
-};
-
-// HELP BUTTON
-helpBtn.onclick=()=>openDM("Whisp_Management");
-
-// OPEN DM WITH HELP
-async function openDM(username){
-  const usersSnap=await get(ref(db,"users"));
-  let targetUser=null;
-  usersSnap.forEach(u=>{ const val=u.val(); if(val.username.toLowerCase()===username.toLowerCase()) targetUser={uid:u.key,username:val.username}; });
-  if(!targetUser){ alert("Help account not found"); return; }
-
-  const chatsSnap=await get(ref(db,"chats"));
-  let chatId=null;
-  if(chatsSnap.exists()){ chatsSnap.forEach(c=>{ const chat=c.val(); if(!chat.isGroup && chat.members.includes(currentUser.uid) && chat.members.includes(targetUser.uid)) chatId=c.key; }); }
-  if(!chatId){ const newChatRef=push(ref(db,"chats")); await set(newChatRef,{isGroup:false,members:[currentUser.uid,targetUser.uid],name:targetUser.username}); chatId=newChatRef.key; }
-
-  openChat(chatId,targetUser.username);
-
-  // Auto-reply
-  const messagesRef=ref(db,`chats/${chatId}/messages`);
-  onChildAdded(messagesRef,snap=>{
-    const msg=snap.val();
-    if(msg.sender===currentUser.uid && username==="Whisp_Management"){
-      push(messagesRef,{sender:targetUser.uid,text:"Thanks for reaching out! Our team will get back to you as quickly as possible.",time:Date.now()});
+  function showNotification(title,body){
+    if(!("Notification"in window))return;
+    if(Notification.permission==="granted"){
+      navigator.serviceWorker.ready.then(r=>r.showNotification(title,{body,icon:"https://cdn-icons-png.flaticon.com/512/1384/1384031.png"}));
     }
-  });
-}
+  }
 </script>
 </body>
 </html>
