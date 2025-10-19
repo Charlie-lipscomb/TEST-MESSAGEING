@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Whisp Chat</title>
 <style>
-  body { font-family: system-ui, sans-serif; margin:0; background:#d0e7ff; display:flex; justify-content:center; }
+  body { font-family: system-ui, sans-serif; margin:0; background:#dcefff; display:flex; justify-content:center; }
   main { width:100%; max-width:600px; height:100vh; background:#fff; display:flex; flex-direction:column; overflow:hidden; box-shadow:0 4px 10px rgba(0,0,0,0.1);}
   header { background:#a1cfff; color:white; padding:14px; text-align:center; font-weight:600;}
   .screen { display:none; flex-direction:column; flex:1; }
@@ -72,13 +72,13 @@ import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, on
 
 // 🔧 Replace with your Firebase config
 const firebaseConfig = {
-  apiKey: "AIzaSyCEdtncZpDgOSnULIjopee7GKh9h9hveKk",
-  authDomain: "messagingapp-7ede5.firebaseapp.com",
-  databaseURL: "https://messagingapp-7ede5-default-rtdb.firebaseio.com",
-  projectId: "messagingapp-7ede5",
-  storageBucket: "messagingapp-7ede5.firebasestorage.app",
-  messagingSenderId: "221896974865",
-  appId: "1:221896974865:web:3faca4885e48ee656907b0"
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_AUTH_DOMAIN",
+  databaseURL: "YOUR_DB_URL",
+  projectId: "YOUR_PROJECT_ID",
+  storageBucket: "YOUR_STORAGE_BUCKET",
+  messagingSenderId: "YOUR_SENDER_ID",
+  appId: "YOUR_APP_ID"
 };
 
 const app = initializeApp(firebaseConfig);
