@@ -43,7 +43,8 @@ main {height:100%;display:flex;flex-direction:column;}
 #replyText{flex:1;}
 #cancelReply{background:none;border:none;color:#1a73e8;font-weight:bold;cursor:pointer;margin-left:10px;}
 
-#inputBar{display:flex;align-items:center;background:#fff;padding:8px;border-top:1px solid #ccc;}
+/* Input Bar */
+#inputBar{display:none;flex:1;align-items:center;background:#fff;padding:8px;border-top:1px solid #ccc;}
 #message{flex:1;padding:10px;border-radius:20px;border:1px solid #ccc;outline:none;}
 #sendBtn{background:#1a73e8;color:white;border:none;border-radius:50%;width:42px;height:42px;margin-left:8px;font-size:1.2rem;cursor:pointer;}
 
@@ -116,7 +117,8 @@ const loginScreen=document.getElementById("loginScreen"),
       replyBar=document.getElementById("replyBar"),
       replyText=document.getElementById("replyText"),
       cancelReplyBtn=document.getElementById("cancelReply"),
-      messageInput=document.getElementById("message");
+      messageInput=document.getElementById("message"),
+      inputBar=document.getElementById("inputBar");
 
 let currentUser=null, currentChatId=null, replyTo=null, currentListenerRef=null;
 
@@ -163,6 +165,7 @@ async function openChat(id,name){
   document.getElementById("chatName").textContent=name;
   messagesDiv.innerHTML="";
   show(chatScreen);
+  inputBar.style.display="flex"; // show input bar
   if(currentListenerRef){ off(currentListenerRef); }
   const msgRef=ref(db,"chats/"+id+"/messages");
   currentListenerRef=msgRef;
@@ -179,7 +182,6 @@ function renderMessage(m){
   messagesDiv.append(div);
   messagesDiv.scrollTop=messagesDiv.scrollHeight;
 
-  // Swipe to reply
   div.addEventListener("touchstart",e=>div.startX=e.touches[0].clientX);
   div.addEventListener("touchmove",e=>{
     const diff=e.touches[0].clientX-div.startX;
@@ -187,7 +189,6 @@ function renderMessage(m){
   });
   div.onclick=()=>showReplyBar(m.text);
 
-  // Notification
   if(m.sender!==currentUser.uid) showNotification("New message",m.text);
 }
 
@@ -211,8 +212,19 @@ document.getElementById("sendBtn").onclick=async()=>{
   replyBar.style.display="none";
 };
 
-document.getElementById("backBtn").onclick=()=>{currentChatId=null;if(currentListenerRef){off(currentListenerRef);}show(chatListScreen);};
-document.getElementById("logoutBtn").onclick=async()=>{await signOut(auth);currentUser=null;show(loginScreen);};
+document.getElementById("backBtn").onclick=()=>{
+  currentChatId=null;
+  if(currentListenerRef){off(currentListenerRef);}
+  show(chatListScreen);
+  inputBar.style.display="none"; // hide input bar
+};
+
+document.getElementById("logoutBtn").onclick=async()=>{
+  await signOut(auth);
+  currentUser=null;
+  show(loginScreen);
+  inputBar.style.display="none";
+};
 
 document.getElementById("groupBtn").onclick=async()=>{
   const name=prompt("Group name:");if(!name)return;
@@ -253,35 +265,28 @@ document.getElementById("helpBtn").onclick=async()=>{
   if(chatsSnap.exists()){
     chatsSnap.forEach(c=>{
       const chat=c.val();
-      if(!chat.isGroup && chat.members.includes(currentUser.uid) && chat.members.includes(helpUser.uid)){
-        chatId=c.key;
-      }
+      if(!c.val().isGroup && c.val().members.includes(currentUser.uid) && c.val().members.includes(helpUser.uid)) chatId=c.key;
     });
   }
   if(!chatId){
-    const newChatRef=push(ref(db,"chats"));
-    await set(newChatRef,{name:"Whisp_Management",isGroup:false,members:[currentUser.uid,helpUser.uid]});
-    chatId=newChatRef.key;
+    const refNew=push(ref(db,"chats"));
+    await set(refNew,{name:"Help",isGroup:false,members:[currentUser.uid,helpUser.uid]});
+    chatId=refNew.key;
   }
 
-  openChat(chatId,"Whisp_Management");
-
-  const messagesRef=ref(db,`chats/${chatId}/messages`);
-  onChildAdded(messagesRef, async snap=>{
-    const msg=snap.val();
-    if(msg.sender===currentUser.uid){
-      await push(ref(db,`chats/${chatId}/messages`),{sender:helpUser.uid,text:"Thank you for messaging Whisp Management. We will respond to your message as soon as possible.",time:Date.now()});
-    }
-  });
+  openChat(chatId,"Help");
+  const sendHandler=async()=>{
+    await push(ref(db,"chats/"+chatId+"/messages"),{sender:currentUser.uid,text:"Hello, I need help!",time:Date.now()});
+    await push(ref(db,"chats/"+chatId+"/messages"),{sender:helpUser.uid,text:"Thank you for messaging Whisp Management. We will respond as soon as possible.",time:Date.now()});
+    messageInput.value="";
+  };
+  document.getElementById("sendBtn").onclick=sendHandler;
 };
 
 // Notifications
-if("serviceWorker"in navigator){navigator.serviceWorker.register("sw.js").then(()=>Notification.requestPermission());}
 function showNotification(title,body){
-  if(!("Notification"in window))return;
-  if(Notification.permission==="granted"){
-    navigator.serviceWorker.ready.then(r=>r.showNotification(title,{body,icon:"https://cdn-icons-png.flaticon.com/512/906/906349.png"}));
-  }
+  if(Notification.permission==="granted") new Notification(title,{body});
+  else if(Notification.permission!=="denied") Notification.requestPermission();
 }
 </script>
 </body>
