@@ -1,102 +1,183 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Whisp</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Whisp 💬</title>
 <style>
-  html, body{margin:0;padding:0;height:100%;font-family:"Segoe UI",Roboto,sans-serif;background:#e8f0fe;}
-  main{height:100%;display:flex;flex-direction:column;}
+  body {
+    font-family: system-ui, sans-serif;
+    margin: 0;
+    background: #e9f2ff;
+    display: flex;
+    justify-content: center;
+    height: 100vh;
+  }
+  main {
+    width: 100%;
+    max-width: 600px;
+    height: 100vh;
+    background: #fff;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  }
+  header {
+    background: #1976d2;
+    color: white;
+    padding: 14px;
+    text-align: center;
+    font-weight: 600;
+  }
+  .screen { display: none; flex: 1; flex-direction: column; }
+  .screen.active { display: flex; }
+  input, textarea, button { font-family: inherit; font-size: 1rem; }
 
-  .screen{display:none;flex-direction:column;height:100%;}
-  .screen.active{display:flex;}
+  .auth { padding: 20px; display: flex; flex-direction: column; gap: 10px; }
+  .auth input { padding: 10px; border-radius: 6px; border: 1px solid #ccc; }
+  .auth button { background: #1976d2; color: white; border: none; border-radius: 6px; padding: 10px; cursor: pointer; }
 
-  /* Login */
-  #loginScreen{justify-content:center;align-items:center;background:#1a73e8;color:white;text-align:center;padding:20px;}
-  #loginScreen h2{font-size:2rem;margin-bottom:20px;}
-  #loginScreen input{display:block;width:80%;margin:8px auto;padding:10px;border-radius:8px;border:none;font-size:1rem;}
-  #loginBtn{background:#4285f4;color:white;border:none;padding:10px 20px;border-radius:8px;cursor:pointer;font-weight:600;box-shadow:0 2px 5px rgba(0,0,0,0.2);}
+  #chatList { flex: 1; overflow-y: auto; padding: 10px; }
+  .chat-item { padding: 12px; border-bottom: 1px solid #ddd; cursor: pointer; }
+  .chat-item:hover { background: #f7faff; }
 
-  /* Chat List */
-  #chatListScreen{background:#fff;flex:1;}
-  #chatListHeader{background:#1a73e8;color:white;padding:14px;display:flex;justify-content:space-between;align-items:center;font-weight:600;}
-  #chatList{flex:1;overflow-y:auto;padding-bottom:70px;}
-  .chatItem{padding:14px;border-bottom:1px solid #eee;cursor:pointer;}
-  .chatItem:hover{background:#f1f5ff;}
+  #chatHeader {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 10px; background: #1976d2; color: white;
+  }
+  #chatHeader button {
+    background: #2196f3;
+    color: white;
+    border: none;
+    padding: 6px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+  }
 
-  /* Bottom Menu */
-  #bottomMenu{display:flex;justify-content:space-around;align-items:center;position:fixed;bottom:0;left:0;width:100%;background:#1a73e8;padding:10px 0;}
-  #bottomMenu button{background:#fff;border:none;color:#1a73e8;padding:8px 16px;border-radius:8px;font-weight:600;cursor:pointer;}
+  #chatTitle { font-weight: bold; text-align: center; flex: 1; margin: 0 10px; }
+  #messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 10px;
+    background: #f2f7ff;
+    display: flex;
+    flex-direction: column;
+  }
 
-  /* Chat */
-  #chatScreen{background:#e8f0fe;flex:1;display:flex;flex-direction:column;}
-  #chatHeader{background:#1a73e8;color:white;padding:12px;display:flex;justify-content:space-between;align-items:center;}
-  #chatHeader button{background:none;border:none;color:white;font-size:1rem;cursor:pointer;}
-  #messages{flex:1;overflow-y:auto;padding:10px;display:flex;flex-direction:column;}
-  .msg{max-width:80%;margin-bottom:10px;padding:8px 12px;border-radius:10px;position:relative;word-wrap:break-word;}
-  .me{align-self:flex-end;background:#cfe2ff;}
-  .them{align-self:flex-start;background:#fff;}
-  .timestamp{font-size:0.75rem;color:#666;text-align:right;margin-top:2px;}
-  .msg img{max-width:70%;border-radius:10px;margin-top:4px;}
+  .msg {
+    max-width: 75%;
+    padding: 8px 12px;
+    border-radius: 10px;
+    margin: 6px 0;
+    word-break: break-word;
+    position: relative;
+  }
+  .you { align-self: flex-end; background: #cfe9ff; }
+  .other { align-self: flex-start; background: #fff; }
 
-  /* Reply Bar */
-  #replyBar{display:none;background:#e3f2fd;padding:6px 10px;border-left:4px solid #1a73e8;font-size:0.9rem;align-items:center;display:flex;justify-content:space-between;}
-  #replyText{flex:1;}
-  #cancelReply{background:none;border:none;color:#1a73e8;font-weight:bold;cursor:pointer;margin-left:10px;}
+  .msg img {
+    max-width: 100%;
+    border-radius: 10px;
+    margin-top: 5px;
+    cursor: pointer;
+  }
 
-  #inputBar{display:flex;align-items:center;background:#fff;padding:8px;border-top:1px solid #ccc;}
-  #message{flex:1;padding:10px;border-radius:20px;border:1px solid #ccc;outline:none;}
-  #sendBtn{background:#1a73e8;color:white;border:none;border-radius:50%;width:42px;height:42px;margin-left:8px;font-size:1.2rem;cursor:pointer;}
-  #imageBtn{background:none;border:none;font-size:1.5rem;margin-left:6px;cursor:pointer;}
+  .timestamp {
+    font-size: 0.7rem;
+    color: #555;
+    position: absolute;
+    bottom: -14px;
+    right: 6px;
+  }
 
-  @media (min-width:700px){main{max-width:600px;margin:auto;border-radius:10px;overflow:hidden;}#bottomMenu{position:static;border-top:1px solid #ccc;}}
+  form {
+    display: flex;
+    align-items: center;
+    padding: 10px;
+    background: #e9f2ff;
+    flex-shrink: 0;
+  }
+  textarea {
+    flex: 1;
+    padding: 10px;
+    border-radius: 20px;
+    border: 1px solid #ccc;
+    resize: none;
+    outline: none;
+  }
+  button.send, #uploadImage {
+    background: #1976d2;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 42px;
+    height: 42px;
+    margin-left: 8px;
+    font-size: 1.2rem;
+    cursor: pointer;
+  }
+
+  #replyBanner {
+    display: none;
+    background: #d0e4ff;
+    padding: 6px 10px;
+    border-left: 4px solid #1976d2;
+    color: #333;
+    font-size: 0.9rem;
+    align-items: center;
+    justify-content: space-between;
+  }
+  #replyBanner span { flex: 1; }
+  #cancelReply { cursor: pointer; font-weight: bold; color: #1976d2; margin-left: 10px; }
 </style>
 </head>
 <body>
 <main>
-  <section id="loginScreen" class="screen active">
-    <div>
-      <h2>Welcome to Whisp 💬</h2>
-      <input id="email" placeholder="Email" />
-      <input id="password" type="password" placeholder="Password" />
-      <input id="username" placeholder="Username (for signup)" />
-      <button id="loginBtn">Login / Register</button>
-    </div>
-  </section>
+  <header>💬 Whisp</header>
 
-  <section id="chatListScreen" class="screen">
-    <div id="chatListHeader">Whisp Chats</div>
+  <!-- AUTH -->
+  <div id="authScreen" class="screen active">
+    <div class="auth">
+      <input id="email" placeholder="Email">
+      <input id="password" type="password" placeholder="Password">
+      <input id="username" placeholder="Username (new users)">
+      <button id="signup">Sign Up</button>
+      <button id="login">Log In</button>
+    </div>
+  </div>
+
+  <!-- CHAT LIST -->
+  <div id="chatListScreen" class="screen">
+    <button id="newGroup" style="margin:10px;">➕ New Group</button>
     <div id="chatList"></div>
-    <div id="bottomMenu">
-      <button id="dmBtn">DM</button>
-      <button id="groupBtn">Group</button>
-      <button id="logoutBtn">Logout</button>
-    </div>
-  </section>
+  </div>
 
-  <section id="chatScreen" class="screen">
+  <!-- CHAT -->
+  <div id="chatScreen" class="screen">
     <div id="chatHeader">
-      <button id="backBtn">←</button>
-      <span id="chatName">Chat</span>
+      <button id="backBtn">⬅ Back</button>
+      <span id="chatTitle">Chat</span>
+      <button id="dmBtn">💬 DM</button>
+    </div>
+    <div id="replyBanner">
+      <span id="replyText"></span>
+      <span id="cancelReply">✖</span>
     </div>
     <div id="messages"></div>
-    <div id="replyBar">
-      <span id="replyText"></span>
-      <button id="cancelReply">✖</button>
-    </div>
-    <div id="inputBar">
-      <input id="message" placeholder="Type a message..." />
-      <input type="file" id="imageInput" accept="image/*" style="display:none;" />
-      <button id="imageBtn">📎</button>
-      <button id="sendBtn">➤</button>
-    </div>
-  </section>
+    <form id="chatForm" onsubmit="return false;">
+      <input type="file" id="imageInput" accept="image/*" style="display:none">
+      <button id="uploadImage">📷</button>
+      <textarea id="message" placeholder="Type a message..."></textarea>
+      <button class="send" id="send">➤</button>
+    </form>
+  </div>
 </main>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
-import { getDatabase, ref, set, push, get, onChildAdded, off } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
+import { getDatabase, ref, push, set, onChildAdded, get } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
 import { getStorage, ref as sRef, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-storage.js";
 
 const firebaseConfig = {
@@ -108,163 +189,205 @@ const firebaseConfig = {
   messagingSenderId: "221896974865",
   appId: "1:221896974865:web:3faca4885e48ee656907b0"
 };
+
 const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
 const db = getDatabase(app);
+const auth = getAuth(app);
 const storage = getStorage(app);
 
-const loginScreen=document.getElementById("loginScreen"),
-      chatListScreen=document.getElementById("chatListScreen"),
-      chatScreen=document.getElementById("chatScreen"),
-      chatList=document.getElementById("chatList"),
-      messagesDiv=document.getElementById("messages"),
-      replyBar=document.getElementById("replyBar"),
-      replyText=document.getElementById("replyText"),
-      cancelReplyBtn=document.getElementById("cancelReply"),
-      messageInput=document.getElementById("message");
+const authScreen = document.getElementById("authScreen");
+const chatListScreen = document.getElementById("chatListScreen");
+const chatScreen = document.getElementById("chatScreen");
+const chatList = document.getElementById("chatList");
+const messagesDiv = document.getElementById("messages");
+const replyBanner = document.getElementById("replyBanner");
+const replyText = document.getElementById("replyText");
+const cancelReply = document.getElementById("cancelReply");
 
-let currentUser=null, currentChatId=null, replyTo=null, currentListenerRef=null;
+let currentUser = null;
+let currentChatId = null;
+let replyTo = null;
+let messagesRef = null;
+let listenerSet = false;
 
-const show=(s)=>{[loginScreen,chatListScreen,chatScreen].forEach(e=>e.classList.remove("active"));s.classList.add("active");};
-
-document.getElementById("loginBtn").onclick=async()=>{
-  const email=document.getElementById("email").value.trim();
-  const password=document.getElementById("password").value.trim();
-  const username=document.getElementById("username").value.trim();
-  if(!email||!password)return alert("Enter credentials.");
-  try{
-    const cred=await signInWithEmailAndPassword(auth,email,password);
-    currentUser=cred.user;
-  }catch{
-    const cred=await createUserWithEmailAndPassword(auth,email,password);
-    currentUser=cred.user;
-    await set(ref(db,"users/"+currentUser.uid),{username,email});
-  }
+const show = el => {
+  [authScreen, chatListScreen, chatScreen].forEach(s => s.classList.remove("active"));
+  el.classList.add("active");
 };
 
-onAuthStateChanged(auth,async user=>{
-  if(user){currentUser=user;loadChats();show(chatListScreen);}else{show(loginScreen);}
+document.getElementById("signup").onclick = async () => {
+  const email = email.value.trim();
+  const password = document.getElementById("password").value.trim();
+  const username = document.getElementById("username").value.trim();
+  if (!email || !password || !username) return alert("Fill all fields");
+  try {
+    const cred = await createUserWithEmailAndPassword(auth, email, password);
+    await set(ref(db, "users/" + cred.user.uid), { username, email });
+  } catch (err) { alert(err.message); }
+};
+
+document.getElementById("login").onclick = async () => {
+  const email = document.getElementById("email").value.trim();
+  const password = document.getElementById("password").value.trim();
+  try { await signInWithEmailAndPassword(auth, email, password); }
+  catch (err) { alert(err.message); }
+};
+
+onAuthStateChanged(auth, async (user) => {
+  if (user) { currentUser = user; show(chatListScreen); loadChats(); }
+  else show(authScreen);
 });
 
-async function loadChats(){
-  chatList.innerHTML="";
-  const chats=await get(ref(db,"chats"));
-  if(chats.exists()){
-    chats.forEach(c=>{
-      const chat=c.val();
-      if(chat.members&&chat.members.includes(currentUser.uid)){
-        const div=document.createElement("div");
-        div.className="chatItem";
-        div.textContent=chat.name;
-        div.onclick=()=>openChat(c.key,chat.name);
-        chatList.append(div);
-      }
-    });
-  }
-}
-
-async function openChat(id,name){
-  currentChatId=id;
-  document.getElementById("chatName").textContent=name;
-  messagesDiv.innerHTML="";
-  show(chatScreen);
-  if(currentListenerRef){ off(currentListenerRef); }
-  const msgRef=ref(db,"chats/"+id+"/messages");
-  currentListenerRef=msgRef;
-  onChildAdded(msgRef,s=>renderMessage(s.val()));
-}
-
-function renderMessage(m){
-  const div=document.createElement("div");
-  div.classList.add("msg",m.sender===currentUser.uid?"me":"them");
-  
-  let content="";
-  if(m.replyTo) content+=`<div style="font-size:0.85rem;color:#555;border-left:3px solid #1a73e8;padding-left:6px;margin-bottom:3px;">${m.replyTo}</div>`;
-  if(m.text) content+=`<div>${m.text}</div>`;
-  if(m.image) content+=`<img src="${m.image}" />`;
-  content+=`<div class="timestamp">${new Date(m.time).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}</div>`;
-  
-  div.innerHTML=content;
-  messagesDiv.appendChild(div);
-  messagesDiv.scrollTop=messagesDiv.scrollHeight;
-
-  // Swipe-to-reply
-  div.addEventListener("touchstart",e=>div.startX=e.touches[0].clientX);
-  div.addEventListener("touchmove",e=>{
-    const diff=e.touches[0].clientX-div.startX;
-    if(diff>70) showReplyBar(m.text || (m.image?"📷 Image":""));
+async function loadChats() {
+  chatList.innerHTML = "";
+  const snapshot = await get(ref(db, "chats"));
+  if (!snapshot.exists()) return;
+  snapshot.forEach(chatSnap => {
+    const chat = chatSnap.val();
+    if (chat.members && chat.members.includes(currentUser.uid)) {
+      const div = document.createElement("div");
+      div.classList.add("chat-item");
+      div.textContent = chat.isGroup ? "👥 " + chat.name : "💬 " + chat.name;
+      div.onclick = () => openChat(chatSnap.key, chat.name);
+      chatList.appendChild(div);
+    }
   });
-  div.onclick=()=>showReplyBar(m.text || (m.image?"📷 Image":""));
-
-  // Notification
-  if(m.sender!==currentUser.uid) showNotification("New message",m.text||"📷 Image");
 }
 
-function showReplyBar(text){
-  replyTo=text;
-  replyBar.style.display="flex";
-  replyText.textContent="Replying to: "+text.slice(0,40);
-}
+async function openChat(chatId, chatName) {
+  currentChatId = chatId;
+  show(chatScreen);
+  document.getElementById("chatTitle").textContent = chatName;
+  messagesDiv.innerHTML = "";
 
-cancelReplyBtn.onclick=()=>{
-  replyTo=null;
-  replyBar.style.display="none";
-};
+  messagesRef = ref(db, `chats/${chatId}/messages`);
+  if (!listenerSet) {
+    onChildAdded(messagesRef, snap => {
+      const msg = snap.val();
+      const div = document.createElement("div");
+      div.classList.add("msg", msg.sender === currentUser.uid ? "you" : "other");
+      div.innerHTML = msg.replyTo ? `<b>↩️ ${msg.replyTo.text}</b><br>` : "";
+      if (msg.imageURL) {
+        const img = document.createElement("img");
+        img.src = msg.imageURL;
+        img.onclick = () => window.open(msg.imageURL, "_blank");
+        div.appendChild(img);
+      }
+      if (msg.text) div.innerHTML += msg.text;
+      const ts = document.createElement("span");
+      ts.className = "timestamp";
+      ts.textContent = new Date(msg.time).toLocaleTimeString();
+      div.appendChild(ts);
 
-document.getElementById("sendBtn").onclick=async()=>{
-  const text=messageInput.value.trim();
-  if(!text&&!replyTo)return;
-  await push(ref(db,"chats/"+currentChatId+"/messages"),{sender:currentUser.uid,text,replyTo,time:Date.now()});
-  messageInput.value="";
-  replyTo=null;
-  replyBar.style.display="none";
-};
+      div.addEventListener("touchstart", e => (div.startX = e.touches[0].clientX));
+      div.addEventListener("touchend", e => {
+        const diff = e.changedTouches[0].clientX - div.startX;
+        if (diff > 50) showReplyBanner(msg);
+      });
 
-document.getElementById("backBtn").onclick=()=>{currentChatId=null;if(currentListenerRef){off(currentListenerRef);}show(chatListScreen);};
-document.getElementById("logoutBtn").onclick=async()=>{await signOut(auth);currentUser=null;show(loginScreen);};
-
-document.getElementById("groupBtn").onclick=async()=>{
-  const name=prompt("Group name:");if(!name)return;
-  const input=prompt("Enter usernames (comma-separated):");
-  const usernames=input?input.split(",").map(u=>u.trim()):[];
-  const usersSnap=await get(ref(db,"users"));
-  const memberIds=[currentUser.uid];
-  usersSnap.forEach(u=>{const val=u.val();if(usernames.includes(val.username))memberIds.push(u.key);});
-  const refNew=push(ref(db,"chats"));
-  await set(refNew,{name,isGroup:true,members:memberIds});
-  loadChats();
-};
-
-document.getElementById("dmBtn").onclick=async()=>{
-  const uname=prompt("Username to DM:");
-  const users=await get(ref(db,"users"));
-  let uid=null;
-  users.forEach(u=>{if(u.val().username===uname)uid=u.key;});
-  if(!uid)return alert("User not found.");
-  const refNew=push(ref(db,"chats"));
-  await set(refNew,{name:uname,isGroup:false,members:[currentUser.uid,uid]});
-  loadChats();
-};
-
-// Image sending
-document.getElementById("imageBtn").onclick=()=>{document.getElementById("imageInput").click();};
-document.getElementById("imageInput").onchange=async(e)=>{
-  const file=e.target.files[0];
-  if(!file||!currentChatId)return;
-  const fileRef=sRef(storage, `images/${currentUser.uid}_${Date.now()}_${file.name}`);
-  await uploadBytes(fileRef,file);
-  const url=await getDownloadURL(fileRef);
-  await push(ref(db,`chats/${currentChatId}/messages`),{sender:currentUser.uid,text:"",image:url,replyTo,time:Date.now()});
-  replyTo=null; replyBar.style.display="none";
-};
-
-// Notifications
-if("serviceWorker"in navigator){navigator.serviceWorker.register("sw.js").then(()=>Notification.requestPermission());}
-function showNotification(title,body){
-  if(!("Notification"in window))return;
-  if(Notification.permission==="granted"){
-    navigator.serviceWorker.ready.then(r=>r.showNotification(title,{body,icon:"https://cdn-icons-png.flaticon.com/512/906/906349.png"}));
+      messagesDiv.appendChild(div);
+      messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    });
+    listenerSet = true;
   }
+}
+
+function showReplyBanner(msg) {
+  replyBanner.style.display = "flex";
+  replyText.textContent = msg.text || "Image";
+  replyTo = msg;
+}
+
+cancelReply.onclick = () => {
+  replyBanner.style.display = "none";
+  replyTo = null;
+};
+
+document.getElementById("send").onclick = async () => {
+  const msgInput = document.getElementById("message");
+  const text = msgInput.value.trim();
+  if (!text && !replyTo) return;
+  await push(messagesRef, {
+    sender: currentUser.uid,
+    text,
+    replyTo: replyTo ? { text: replyTo.text || "Image" } : null,
+    time: Date.now()
+  });
+  msgInput.value = "";
+  replyBanner.style.display = "none";
+  replyTo = null;
+};
+
+document.getElementById("uploadImage").onclick = () => {
+  document.getElementById("imageInput").click();
+};
+
+document.getElementById("imageInput").onchange = async (e) => {
+  const file = e.target.files[0];
+  if (!file || !currentChatId) return;
+  const fileRef = sRef(storage, `images/${currentChatId}/${Date.now()}_${file.name}`);
+  await uploadBytes(fileRef, file);
+  const url = await getDownloadURL(fileRef);
+  await push(messagesRef, {
+    sender: currentUser.uid,
+    imageURL: url,
+    replyTo: replyTo ? { text: replyTo.text || "Image" } : null,
+    time: Date.now()
+  });
+  replyBanner.style.display = "none";
+  replyTo = null;
+};
+
+document.getElementById("backBtn").onclick = () => {
+  currentChatId = null;
+  show(chatListScreen);
+};
+
+document.getElementById("newGroup").onclick = async () => {
+  const name = prompt("Group name:");
+  const members = prompt("Enter usernames to add (comma separated):");
+  if (!name) return;
+  const memberNames = members ? members.split(",").map(u => u.trim().toLowerCase()) : [];
+  const userSnap = await get(ref(db, "users"));
+  let ids = [currentUser.uid];
+  userSnap.forEach(u => {
+    const val = u.val();
+    if (memberNames.includes(val.username.toLowerCase())) ids.push(u.key);
+  });
+  const newChatRef = push(ref(db, "chats"));
+  await set(newChatRef, { name, isGroup: true, members: ids });
+  loadChats();
+};
+
+document.getElementById("dmBtn").onclick = async () => {
+  const uname = prompt("Enter username to DM:");
+  if (!uname) return;
+  const usersSnap = await get(ref(db, "users"));
+  let targetUser = null;
+  usersSnap.forEach(u => {
+    const val = u.val();
+    if (val.username.toLowerCase() === uname.toLowerCase()) targetUser = { uid: u.key, username: val.username };
+  });
+  if (!targetUser) return alert("User not found.");
+
+  const chatsSnap = await get(ref(db, "chats"));
+  let chatId = null;
+  chatsSnap.forEach(c => {
+    const chat = c.val();
+    if (!chat.isGroup && chat.members.includes(currentUser.uid) && chat.members.includes(targetUser.uid))
+      chatId = c.key;
+  });
+  if (!chatId) {
+    const newChatRef = push(ref(db, "chats"));
+    await set(newChatRef, { isGroup: false, members: [currentUser.uid, targetUser.uid], name: targetUser.username });
+    chatId = newChatRef.key;
+  }
+  openChat(chatId, targetUser.username);
+};
+
+// 🔔 Browser Notifications
+if ("Notification" in window && Notification.permission !== "granted") {
+  Notification.requestPermission();
 }
 </script>
 </body>
