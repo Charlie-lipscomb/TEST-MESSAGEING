@@ -3,30 +3,24 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Whisp</title>
+<title>Whisp 💬</title>
 <style>
-html,body{margin:0;padding:0;height:100%;background:#e8f0fe;font-family:"Segoe UI",Roboto,sans-serif;}
+html,body{margin:0;padding:0;height:100%;font-family:sans-serif;background:#e8f0fe;}
 main{height:100%;display:flex;flex-direction:column;}
 .screen{display:none;flex-direction:column;height:100%;}
 .screen.active{display:flex;}
-
 /* Login */
 #loginScreen{justify-content:center;align-items:center;background:#1a73e8;color:white;text-align:center;padding:20px;display:flex;flex-direction:column;}
-#loginScreen h2{font-size:2rem;margin-bottom:20px;}
-#loginScreen input{display:block;width:80%;margin:8px auto;padding:10px;border-radius:8px;border:none;font-size:1rem;}
+#loginScreen input{width:80%;margin:8px auto;padding:10px;border-radius:8px;border:none;font-size:1rem;}
 #loginBtn{background:#4285f4;color:white;border:none;padding:10px 20px;border-radius:8px;cursor:pointer;font-weight:600;box-shadow:0 2px 5px rgba(0,0,0,0.2);}
-
-/* Chat List */
+/* Chat list */
 #chatListScreen{background:#fff;flex:1;display:flex;flex-direction:column;}
 #chatListHeader{background:#1a73e8;color:white;padding:14px;display:flex;justify-content:space-between;align-items:center;font-weight:600;}
 #chatList{flex:1;overflow-y:auto;padding-bottom:70px;}
 .chatItem{padding:14px;border-bottom:1px solid #eee;cursor:pointer;}
 .chatItem:hover{background:#f1f5ff;}
-
-/* Bottom Menu */
 #bottomMenu{display:flex;justify-content:space-around;align-items:center;position:fixed;bottom:0;left:0;width:100%;background:#1a73e8;padding:10px 0;}
 #bottomMenu button{background:#fff;border:none;color:#1a73e8;padding:8px 16px;border-radius:8px;font-weight:600;cursor:pointer;}
-
 /* Chat */
 #chatScreen{background:#e8f0fe;flex:1;display:flex;flex-direction:column;}
 #chatHeader{background:#1a73e8;color:white;padding:12px;display:flex;justify-content:space-between;align-items:center;}
@@ -37,20 +31,13 @@ main{height:100%;display:flex;flex-direction:column;}
 .them{align-self:flex-start;background:#fff;}
 .timestamp{font-size:0.75rem;color:#666;text-align:right;margin-top:2px;}
 .readReceipt{font-size:0.75rem;color:#1a73e8;margin-left:5px;}
-
-/* Reply Bar */
 #replyBar{display:none;background:#e3f2fd;padding:6px 10px;border-left:4px solid #1a73e8;font-size:0.9rem;align-items:center;display:flex;justify-content:space-between;}
 #replyText{flex:1;}
 #cancelReply{background:none;border:none;color:#1a73e8;font-weight:bold;cursor:pointer;margin-left:10px;}
-
-/* Typing Indicator */
 #typingIndicator{font-size:0.85rem;color:#555;padding:4px 10px;height:18px;}
-
-/* Input Bar */
 #inputBar{display:flex;align-items:center;background:#fff;padding:8px;border-top:1px solid #ccc;}
 #message{flex:1;padding:10px;border-radius:20px;border:1px solid #ccc;outline:none;}
 #sendBtn{background:#1a73e8;color:white;border:none;border-radius:50%;width:42px;height:42px;margin-left:8px;font-size:1.2rem;cursor:pointer;}
-
 @media(min-width:700px){main{max-width:600px;margin:auto;border-radius:10px;overflow:hidden;}#bottomMenu{position:static;border-top:1px solid #ccc;}}
 </style>
 </head>
@@ -60,7 +47,7 @@ main{height:100%;display:flex;flex-direction:column;}
     <h2>Welcome to Whisp 💬</h2>
     <input id="email" placeholder="Email" />
     <input id="password" type="password" placeholder="Password" />
-    <input id="username" placeholder="Username (for signup)" />
+    <input id="username" placeholder="Username (signup only)" />
     <button id="loginBtn">Login / Register</button>
   </section>
 
@@ -194,7 +181,7 @@ async function openChat(id,name){
     div.dataset.key = key;
     div.classList.add("msg", m.sender===currentUser.uid?"me":"them");
     div.msgData = m;
-    div.innerHTML = `${m.replyTo?`<div style="font-size:0.85rem;color:#555;border-left:3px solid #1a73e8;padding-left:6px;margin-bottom:3px;">${m.replyTo}</div>`:""}${m.text}<div class="timestamp">${new Date(m.time).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}${m.seen && m.seen.includes(currentUser.uid?" ✅":" ❑")}</div>`;
+    div.innerHTML = `${m.replyTo?`<div style="font-size:0.85rem;color:#555;border-left:3px solid #1a73e8;padding-left:6px;margin-bottom:3px;">${m.replyTo}</div>`:""}${m.text}<div class="timestamp">${new Date(m.time).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}${m.seen && m.seen.includes(currentUser.uid)?" ✅":""}</div>`;
     messagesDiv.append(div);
     messagesDiv.scrollTop=messagesDiv.scrollHeight;
 
@@ -236,8 +223,6 @@ document.getElementById("sendBtn").onclick=async()=>{
   await push(ref(db,"chats/"+currentChatId+"/messages"),msg);
   messageInput.value="";
   replyBar.style.display="none"; replyTo=null;
-
-  // Typing false
   set(ref(db,`chats/${currentChatId}/typing/${currentUser.uid}`),false);
 };
 
@@ -259,8 +244,6 @@ document.getElementById("dmBtn").onclick=async()=>{
   const usersSnap=await get(ref(db,"users")); let target=null;
   usersSnap.forEach(u=>{const v=u.val();if(v.username.toLowerCase()===username.toLowerCase())target={uid:u.key,name:v.username};});
   if(!target) return alert("User not found");
-
-  // check existing
   const chatsSnap=await get(ref(db,"chats"));
   let chatId=null;
   if(chatsSnap.exists()) chatsSnap.forEach(c=>{
