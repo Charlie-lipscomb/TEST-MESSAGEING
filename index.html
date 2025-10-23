@@ -1,366 +1,296 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Whisp</title>
-<style>
-  html, body {
-    margin: 0; padding: 0; height: 100%;
-    background: #e8f0fe; font-family: "Segoe UI", Roboto, sans-serif;
-  }
-  main { height: 100%; display: flex; flex-direction: column; }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Whisp 💬</title>
+  <style>
+    body { font-family: system-ui, sans-serif; margin: 0; background: #f4f6fb; }
+    .hidden { display: none; }
+    #loginScreen, #chatsScreen, #chatScreen { max-width: 600px; margin: auto; padding: 1rem; }
+    h2 { text-align: center; color: #1a73e8; }
 
-  .screen { display: none; flex-direction: column; height: 100%; }
-  .screen.active { display: flex; }
+    /* Buttons */
+    button, input[type=submit] {
+      background: #1a73e8; color: white; border: none; padding: 10px 14px;
+      border-radius: 8px; cursor: pointer; font-size: 1rem;
+    }
+    button:hover { background: #155fc1; }
 
-  /* Login */
-  #loginScreen {
-    justify-content: center; align-items: center;
-    background: #1a73e8; color: white;
-    text-align: center; padding: 20px;
-  }
-  #loginScreen h2 { font-size: 2rem; margin-bottom: 20px; }
-  #loginScreen input {
-    display: block; width: 80%; margin: 8px auto;
-    padding: 10px; border-radius: 8px; border: none; font-size: 1rem;
-  }
-  #loginBtn {
-    background: #4285f4; color: white; border: none;
-    padding: 10px 20px; border-radius: 8px; cursor: pointer;
-    font-weight: 600; box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-  }
+    /* Chat list */
+    .chatItem {
+      background: white; margin: 8px 0; padding: 12px 16px;
+      border-radius: 10px; box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+      display: flex; justify-content: space-between; align-items: center;
+      cursor: pointer;
+    }
+    .chatItem:hover { background: #eef5ff; }
+    .chatName { font-weight: 500; color: #222; }
+    .unread .chatName { font-weight: 700; }
+    .dot {
+      width: 10px; height: 10px; border-radius: 50%; background: #1a73e8;
+    }
 
-  /* Chat List */
-  #chatListScreen { background: #fff; flex: 1; }
-  #chatListHeader {
-    background: #1a73e8; color: white;
-    padding: 14px; display: flex; justify-content: space-between; align-items: center;
-    font-weight: 600;
-  }
-  #chatList { flex: 1; overflow-y: auto; padding-bottom: 70px; }
-  .chatItem {
-    padding: 14px; border-bottom: 1px solid #eee; cursor: pointer;
-  }
-  .chatItem:hover { background: #f1f5ff; }
+    /* Chat screen */
+    #messagesDiv {
+      height: 60vh; overflow-y: auto; background: white; padding: 10px;
+      border-radius: 10px; box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
+    }
+    .msg { max-width: 70%; margin: 6px 0; padding: 10px 14px; border-radius: 16px; }
+    .me { background: #d0e2ff; margin-left: auto; }
+    .them { background: #fff; border: 1px solid #ddd; }
+    .sender {
+      font-size: 0.8rem; color: #1a73e8; font-weight: 600; margin-bottom: 2px;
+    }
+    .timestamp {
+      text-align: right; font-size: 0.7rem; color: #777; margin-top: 2px;
+    }
 
-  /* Bottom Menu */
-  #bottomMenu {
-    display: flex; justify-content: space-around; align-items: center;
-    position: fixed; bottom: 0; left: 0; width: 100%;
-    background: #1a73e8; padding: 10px 0;
-  }
-  #bottomMenu button {
-    background: #fff; border: none; color: #1a73e8;
-    padding: 8px 16px; border-radius: 8px;
-    font-weight: 600; cursor: pointer;
-  }
+    /* Reply bar */
+    #replyBar {
+      background: #eef3ff; padding: 6px 10px; border-left: 3px solid #1a73e8;
+      display: none; align-items: center; justify-content: space-between;
+      border-radius: 8px; margin: 5px 0;
+    }
+    #replyBar.show { display: flex; }
 
-  /* Chat */
-  #chatScreen { background: #e8f0fe; }
-  #chatHeader {
-    background: #1a73e8; color: white;
-    padding: 12px; display: flex; justify-content: space-between; align-items: center;
-  }
-  #chatHeader button {
-    background: none; border: none; color: white;
-    font-size: 1rem; cursor: pointer;
-  }
-  #messages {
-    flex: 1; overflow-y: auto; padding: 10px;
-    display: flex; flex-direction: column;
-  }
-  .msg {
-    max-width: 80%; margin-bottom: 10px; padding: 8px 12px;
-    border-radius: 10px; position: relative; word-wrap: break-word;
-  }
-  .me { align-self: flex-end; background: #d0e2ff; }
-  .them { align-self: flex-start; background: #fff; border: 1px solid #ddd; }
-  .sender {
-    font-size: 0.8rem; color: #1a73e8; font-weight: 600; margin-bottom: 2px;
-  }
-  .timestamp {
-    font-size: 0.75rem; color: #666; text-align: right; margin-top: 2px;
-  }
-
-  /* Reply Bar */
-  #replyBar {
-    display: none; background: #e3f2fd;
-    padding: 6px 10px; border-left: 4px solid #1a73e8;
-    font-size: 0.9rem; align-items: center; justify-content: space-between;
-    transition: all 0.2s ease;
-  }
-  #replyText { flex: 1; }
-  #cancelReply {
-    background: none; border: none; color: #1a73e8;
-    font-weight: bold; cursor: pointer; margin-left: 10px;
-  }
-
-  #inputBar {
-    display: flex; align-items: center;
-    background: #fff; padding: 8px; border-top: 1px solid #ccc;
-  }
-  #message {
-    flex: 1; padding: 10px; border-radius: 20px;
-    border: 1px solid #ccc; outline: none;
-  }
-  #sendBtn {
-    background: #1a73e8; color: white; border: none; border-radius: 50%;
-    width: 42px; height: 42px; margin-left: 8px; font-size: 1.2rem; cursor: pointer;
-  }
-
-  @media (min-width:700px) {
-    main { max-width: 600px; margin: auto; border-radius: 10px; overflow: hidden; }
-    #bottomMenu { position: static; border-top: 1px solid #ccc; }
-  }
-</style>
+    @media (max-width:500px){
+      #chatName { font-size: 1rem; }
+    }
+  </style>
 </head>
 <body>
-<main>
-  <!-- LOGIN -->
-  <section id="loginScreen" class="screen active">
-    <div>
-      <h2>Welcome to Whisp 💬</h2>
-      <input id="email" placeholder="Email" />
-      <input id="password" type="password" placeholder="Password" />
-      <label style="display:block;margin:6px 0;">
-        <input type="checkbox" id="showPass" /> Show password
-      </label>
-      <input id="username" placeholder="Username (for signup)" />
-      <button id="loginBtn">Login / Register</button>
-    </div>
-  </section>
 
-  <!-- CHAT LIST -->
-  <section id="chatListScreen" class="screen">
-    <div id="chatListHeader">Whisp Chats</div>
+  <!-- LOGIN -->
+  <div id="loginScreen">
+    <h2>Welcome to Whisp 💬</h2>
+    <form id="loginForm">
+      <input id="email" placeholder="Email" /><br><br>
+      <input id="password" type="password" placeholder="Password" /><br>
+      <label><input type="checkbox" id="showPass" /> Show Password</label><br><br>
+      <input id="username" placeholder="Username (for signup)" /><br><br>
+      <input type="submit" value="Login / Register" />
+    </form>
+  </div>
+
+  <!-- CHATS LIST -->
+  <div id="chatsScreen" class="hidden">
+    <h2>Chats</h2>
     <div id="chatList"></div>
-    <div id="bottomMenu">
-      <button id="dmBtn">DM</button>
-      <button id="groupBtn">Group</button>
-      <button id="logoutBtn">Logout</button>
-    </div>
-  </section>
+    <button id="newChatBtn">New Chat</button>
+  </div>
 
   <!-- CHAT -->
-  <section id="chatScreen" class="screen">
-    <div id="chatHeader">
-      <button id="backBtn">←</button>
-      <span id="chatName">Chat</span>
-    </div>
-    <div id="messages"></div>
+  <div id="chatScreen" class="hidden">
+    <button id="backBtn">⬅ Back</button>
+    <h2 id="chatName">Chat</h2>
+    <div id="messagesDiv"></div>
+
     <div id="replyBar">
-      <span id="replyText"></span>
+      <span id="replyPreview"></span>
       <button id="cancelReply">✖</button>
     </div>
-    <div id="inputBar">
-      <input id="message" placeholder="Type a message..." />
-      <button id="sendBtn">➤</button>
-    </div>
-  </section>
-</main>
 
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
-import { getDatabase, ref, set, push, get, onChildAdded, off } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
+    <input id="message" placeholder="Type a message..." />
+    <button id="sendBtn">Send</button>
+  </div>
 
-const firebaseConfig = {
-  apiKey: "AIzaSyCEdtncZpDgOSnULIjopee7GKh9h9hveKk",
-  authDomain: "messagingapp-7ede5.firebaseapp.com",
-  databaseURL: "https://messagingapp-7ede5-default-rtdb.firebaseio.com",
-  projectId: "messagingapp-7ede5",
-  storageBucket: "messagingapp-7ede5.firebasestorage.app",
-  messagingSenderId: "221896974865",
-  appId: "1:221896974865:web:3faca4885e48ee656907b0"
-};
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-app.js";
+    import {
+      getDatabase, ref, push, set, onChildAdded, onValue, off, get, update
+    } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-database.js";
+    import {
+      getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged
+    } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-auth.js";
 
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getDatabase(app);
+    const firebaseConfig = {
+      apiKey: "AIzaSyCEdtncZpDgOSnULIjopee7GKh9h9hveKk",
+      authDomain: "messagingapp-7ede5.firebaseapp.com",
+      databaseURL: "https://messagingapp-7ede5-default-rtdb.firebaseio.com",
+      projectId: "messagingapp-7ede5",
+      storageBucket: "messagingapp-7ede5.firebasestorage.app",
+      messagingSenderId: "221896974865",
+      appId: "1:221896974865:web:3faca4885e48ee656907b0"
+    };
 
-const loginScreen=document.getElementById("loginScreen"),
-      chatListScreen=document.getElementById("chatListScreen"),
-      chatScreen=document.getElementById("chatScreen"),
-      chatList=document.getElementById("chatList"),
-      messagesDiv=document.getElementById("messages"),
-      replyBar=document.getElementById("replyBar"),
-      replyText=document.getElementById("replyText"),
-      cancelReplyBtn=document.getElementById("cancelReply"),
-      messageInput=document.getElementById("message");
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+    const auth = getAuth(app);
 
-let currentUser=null, currentChatId=null, replyTo=null, currentListenerRef=null;
-let currentChatIsGroup=false, chatMembers={};
+    const loginScreen = document.getElementById("loginScreen");
+    const chatsScreen = document.getElementById("chatsScreen");
+    const chatScreen = document.getElementById("chatScreen");
+    const chatList = document.getElementById("chatList");
+    const messagesDiv = document.getElementById("messagesDiv");
 
-const show=(s)=>{[loginScreen,chatListScreen,chatScreen].forEach(e=>e.classList.remove("active"));s.classList.add("active");};
+    let currentUser, currentChatId = null, currentListenerRef = null;
+    let currentChatIsGroup = false;
+    let chatMembers = {};
+    let replyTo = null;
 
-document.getElementById("showPass").onchange = e =>
-  document.getElementById("password").type = e.target.checked ? "text" : "password";
+    document.getElementById("showPass").onchange = e =>
+      document.getElementById("password").type = e.target.checked ? "text" : "password";
 
-document.getElementById("loginBtn").onclick=async()=>{
-  const email=document.getElementById("email").value.trim();
-  const password=document.getElementById("password").value.trim();
-  const username=document.getElementById("username").value.trim();
-  if(!email||!password)return alert("Enter credentials.");
-  try{
-    const cred=await signInWithEmailAndPassword(auth,email,password);
-    currentUser=cred.user;
-  }catch{
-    try{
-      const cred=await createUserWithEmailAndPassword(auth,email,password);
-      currentUser=cred.user;
-      await set(ref(db,"users/"+currentUser.uid),{username,email});
-    }catch(e){alert("Login/Signup failed: "+e.message);}
-  }
-};
+    const show = scr => [loginScreen, chatsScreen, chatScreen].forEach(s => s.classList.add("hidden")) || scr.classList.remove("hidden");
 
-onAuthStateChanged(auth,async user=>{
-  if(user){currentUser=user;loadChats();show(chatListScreen);}else{show(loginScreen);}
-});
-
-async function loadChats(){
-  chatList.innerHTML="";
-  const chats=await get(ref(db,"chats"));
-  if(chats.exists()){
-    chats.forEach(c=>{
-      const chat=c.val();
-      if(chat.members&&chat.members.includes(currentUser.uid)){
-        const div=document.createElement("div");
-        div.className="chatItem";
-        div.textContent=chat.name;
-        div.onclick=()=>openChat(c.key,chat.name);
-        chatList.append(div);
+    // LOGIN / REGISTER
+    loginForm.onsubmit = async e => {
+      e.preventDefault();
+      const email = email.value.trim(), pass = password.value, uname = username.value.trim();
+      try {
+        let user;
+        try {
+          user = await signInWithEmailAndPassword(auth, email, pass);
+        } catch {
+          user = await createUserWithEmailAndPassword(auth, email, pass);
+          await set(ref(db, "users/" + user.user.uid), { username: uname, email });
+        }
+      } catch (err) {
+        alert(err.message);
       }
+    };
+
+    onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        currentUser = user;
+        loadChats();
+        show(chatsScreen);
+      } else show(loginScreen);
     });
-  }
-}
 
-async function openChat(id,name){
-  currentChatId=id;
-  document.getElementById("chatName").textContent=name;
-  messagesDiv.innerHTML="";
-  show(chatScreen);
+    // LOAD CHATS
+    function loadChats() {
+      chatList.innerHTML = "";
+      const userChats = ref(db, "userChats/" + currentUser.uid);
+      onValue(userChats, async (snap) => {
+        chatList.innerHTML = "";
+        if (!snap.exists()) return;
+        const data = snap.val();
+        for (const id in data) {
+          const cSnap = await get(ref(db, "chats/" + id));
+          if (!cSnap.exists()) continue;
+          const chat = cSnap.val();
+          const div = document.createElement("div");
+          div.className = "chatItem";
+          div.onclick = () => openChat(id, chat.name);
+          div.innerHTML = `<span class="chatName">${chat.name}</span> <div class="dot hidden"></div>`;
+          chatList.append(div);
 
-  if(currentListenerRef) off(currentListenerRef);
-
-  const chatSnap = await get(ref(db,"chats/"+id));
-  const chat = chatSnap.val();
-  currentChatIsGroup = chat.isGroup || false;
-
-  chatMembers = {};
-  if(chat.members){
-    for(const uid of chat.members){
-      const uSnap = await get(ref(db,"users/"+uid));
-      if(uSnap.exists()) chatMembers[uid] = uSnap.val().username || "Unknown";
+          // Watch for unread
+          watchUnread(id, div);
+        }
+      });
     }
-  }
 
-  const msgRef = ref(db,"chats/"+id+"/messages");
-  currentListenerRef = msgRef;
-  onChildAdded(msgRef,s=>renderMessage(s.val()));
-}
+    // Watch for unread messages
+    async function watchUnread(chatId, div) {
+      const dot = div.querySelector(".dot");
+      const readRef = ref(db, "chats/" + chatId + "/read/" + currentUser.uid);
+      const msgRef = ref(db, "chats/" + chatId + "/messages");
 
-function renderMessage(m){
-  const div=document.createElement("div");
-  div.classList.add("msg",m.sender===currentUser.uid?"me":"them");
+      onValue(msgRef, (snap) => {
+        if (!snap.exists()) return;
+        const msgs = Object.values(snap.val());
+        const latest = Math.max(...msgs.map(m => m.time));
+        get(readRef).then(r => {
+          const lastRead = r.exists() ? r.val() : 0;
+          if (latest > lastRead && chatId !== currentChatId) {
+            div.classList.add("unread");
+            dot.classList.remove("hidden");
+          } else {
+            div.classList.remove("unread");
+            dot.classList.add("hidden");
+          }
+        });
+      });
+    }
 
-  let senderLabel="";
-  if(currentChatIsGroup && m.sender!==currentUser.uid){
-    const uname=chatMembers[m.sender]||"Unknown";
-    senderLabel=`<div class="sender">${uname}</div>`;
-  }
+    async function markChatRead(chatId) {
+      await update(ref(db, "chats/" + chatId + "/read"), {
+        [currentUser.uid]: Date.now()
+      });
+    }
 
-  const safeText = (m.text||"").replace(/[<>]/g,"");
-  div.innerHTML=`
-    ${senderLabel}
-    ${m.replyTo?`<div style="font-size:0.85rem;color:#555;border-left:3px solid #1a73e8;padding-left:6px;margin-bottom:3px;">${m.replyTo}</div>`:""}
-    ${safeText}
-    <div class="timestamp">${new Date(m.time).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}</div>`;
+    // OPEN CHAT
+    async function openChat(id, name) {
+      currentChatId = id;
+      document.getElementById("chatName").textContent = name;
+      messagesDiv.innerHTML = "";
+      show(chatScreen);
 
-  messagesDiv.append(div);
-  messagesDiv.scrollTop=messagesDiv.scrollHeight;
+      markChatRead(id); // clear unread flag
 
-  div.addEventListener("touchstart",e=>div.startX=e.touches[0].clientX);
-  div.addEventListener("touchmove",e=>{
-    const diff=e.touches[0].clientX-div.startX;
-    if(diff>70)showReplyBar(m.text);
-  });
-  div.onclick=()=>showReplyBar(m.text);
+      if (currentListenerRef) off(currentListenerRef);
 
-  if(m.sender!==currentUser.uid) showNotification("New message",m.text);
-}
+      const chatSnap = await get(ref(db, "chats/" + id));
+      const chat = chatSnap.val();
+      currentChatIsGroup = chat.isGroup || false;
+      chatMembers = {};
+      if (chat.members) {
+        for (const uid of chat.members) {
+          const uSnap = await get(ref(db, "users/" + uid));
+          if (uSnap.exists()) chatMembers[uid] = uSnap.val().username || "Unknown";
+        }
+      }
 
-function showReplyBar(text){
-  replyTo=text;
-  replyBar.style.display="flex";
-  replyText.textContent="Replying to: "+text.slice(0,40);
-}
+      const msgRef = ref(db, "chats/" + id + "/messages");
+      currentListenerRef = msgRef;
+      onChildAdded(msgRef, (s) => renderMessage(s.val()));
+    }
 
-cancelReplyBtn.onclick=()=>{
-  replyTo=null;
-  replyBar.style.display="none";
-};
+    // RENDER MESSAGE
+    function renderMessage(m) {
+      const div = document.createElement("div");
+      div.classList.add("msg", m.sender === currentUser.uid ? "me" : "them");
 
-document.getElementById("sendBtn").onclick=async()=>{
-  const text=messageInput.value.trim();
-  if(!text||!currentChatId)return;
-  try{
-    await push(ref(db,"chats/"+currentChatId+"/messages"),{
-      sender:currentUser.uid,text,replyTo,time:Date.now()
-    });
-    messageInput.value="";
-    replyTo=null;
-    replyBar.style.display="none";
-  }catch(e){alert("Failed to send message.");}
-};
+      let senderLabel = "";
+      if (currentChatIsGroup && m.sender !== currentUser.uid) {
+        const uname = chatMembers[m.sender] || "Unknown";
+        senderLabel = `<div class="sender">${uname}</div>`;
+      }
 
-document.getElementById("backBtn").onclick=()=>{
-  currentChatId=null;
-  if(currentListenerRef) off(currentListenerRef);
-  show(chatListScreen);
-};
-document.getElementById("logoutBtn").onclick=async()=>{
-  await signOut(auth); currentUser=null; show(loginScreen);
-};
+      div.innerHTML = `
+        ${senderLabel}
+        ${m.replyTo ? `<div style="font-size:0.85rem;color:#555;border-left:3px solid #1a73e8;padding-left:6px;margin-bottom:3px;">${m.replyTo}</div>` : ""}
+        ${m.text}
+        <div class="timestamp">${new Date(m.time).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}</div>
+      `;
 
-document.getElementById("groupBtn").onclick=async()=>{
-  const name=prompt("Group name:"); if(!name)return;
-  const input=prompt("Enter usernames (comma-separated):");
-  const usernames=input?input.split(",").map(u=>u.trim()):[];
-  const usersSnap=await get(ref(db,"users"));
-  const memberIds=[currentUser.uid];
-  usersSnap.forEach(u=>{
-    const val=u.val();
-    if(usernames.includes(val.username))memberIds.push(u.key);
-  });
-  const refNew=push(ref(db,"chats"));
-  await set(refNew,{name,isGroup:true,members:memberIds});
-  loadChats();
-};
+      messagesDiv.append(div);
+      messagesDiv.scrollTop = messagesDiv.scrollHeight;
 
-document.getElementById("dmBtn").onclick=async()=>{
-  const uname=prompt("Username to DM:");
-  const users=await get(ref(db,"users"));
-  let uid=null;
-  users.forEach(u=>{if(u.val().username===uname)uid=u.key;});
-  if(!uid)return alert("User not found.");
-  const refNew=push(ref(db,"chats"));
-  await set(refNew,{name:uname,isGroup:false,members:[currentUser.uid,uid]});
-  loadChats();
-};
+      div.onclick = () => showReplyBar(m.text);
+    }
 
-if("serviceWorker"in navigator){
-  navigator.serviceWorker.register("sw.js").then(()=>Notification.requestPermission());
-}
+    // SEND MESSAGE
+    sendBtn.onclick = async () => {
+      const text = message.value.trim();
+      if (!text || !currentChatId) return;
+      const m = { text, sender: currentUser.uid, time: Date.now(), replyTo };
+      const msgRef = ref(db, "chats/" + currentChatId + "/messages");
+      await push(msgRef, m);
+      message.value = "";
+      replyTo = null;
+      document.getElementById("replyBar").classList.remove("show");
+      markChatRead(currentChatId);
+    };
 
-function showNotification(title,body){
-  if(!("Notification"in window))return;
-  if(Notification.permission==="granted"){
-    navigator.serviceWorker.ready.then(r=>
-      r.showNotification(title,{body,icon:"https://cdn-icons-png.flaticon.com/512/906/906349.png",vibrate:[100,50,100]})
-    );
-  }
-}
-</script>
+    // REPLY BAR
+    function showReplyBar(txt) {
+      replyTo = txt;
+      document.getElementById("replyPreview").textContent = txt.slice(0, 50);
+      document.getElementById("replyBar").classList.add("show");
+    }
+    document.getElementById("cancelReply").onclick = () => {
+      replyTo = null;
+      document.getElementById("replyBar").classList.remove("show");
+    };
+
+    backBtn.onclick = () => {
+      currentChatId = null;
+      show(chatsScreen);
+    };
+  </script>
 </body>
 </html>
