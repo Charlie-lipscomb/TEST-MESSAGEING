@@ -5,57 +5,185 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Whisp 💬</title>
   <style>
-    body { font-family: system-ui, sans-serif; margin: 0; background: #f4f6fb; }
-    .hidden { display: none; }
-    #loginScreen, #chatsScreen, #chatScreen { max-width: 600px; margin: auto; padding: 1rem; }
-    h2 { text-align: center; color: #1a73e8; }
-
-    /* Buttons */
-    button, input[type=submit] {
-      background: #1a73e8; color: white; border: none; padding: 10px 14px;
-      border-radius: 8px; cursor: pointer; font-size: 1rem;
+    :root {
+      --whisp-blue: #007bff;
+      --whisp-bg: #e9f2ff;
+      --whisp-bubble-me: #cfe5ff;
+      --whisp-bubble-them: #ffffff;
     }
-    button:hover { background: #155fc1; }
 
-    /* Chat list */
+    body {
+      font-family: "Inter", system-ui, sans-serif;
+      background: var(--whisp-bg);
+      margin: 0;
+      color: #222;
+    }
+
+    h2 {
+      color: var(--whisp-blue);
+      text-align: center;
+      font-weight: 700;
+      margin-bottom: 1rem;
+    }
+
+    .hidden { display: none; }
+
+    /* Screens */
+    #loginScreen, #chatsScreen, #chatScreen {
+      max-width: 600px;
+      margin: auto;
+      padding: 1rem;
+    }
+
+    /* Inputs & buttons */
+    input, button {
+      font: inherit;
+      border: none;
+      outline: none;
+      border-radius: 10px;
+    }
+
+    input {
+      width: 100%;
+      padding: 10px;
+      margin: 5px 0;
+      border: 1px solid #ccc;
+    }
+
+    button {
+      background: var(--whisp-blue);
+      color: white;
+      padding: 10px 14px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-weight: 500;
+    }
+
+    button:hover {
+      background: #0062d9;
+    }
+
+    /* Chats List */
     .chatItem {
-      background: white; margin: 8px 0; padding: 12px 16px;
-      border-radius: 10px; box-shadow: 0 1px 2px rgba(0,0,0,0.1);
-      display: flex; justify-content: space-between; align-items: center;
+      background: white;
+      border-radius: 15px;
+      padding: 14px 16px;
+      margin: 10px 0;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      transition: 0.2s;
       cursor: pointer;
     }
-    .chatItem:hover { background: #eef5ff; }
-    .chatName { font-weight: 500; color: #222; }
-    .unread .chatName { font-weight: 700; }
+
+    .chatItem:hover {
+      background: #f0f6ff;
+      transform: translateY(-1px);
+    }
+
+    .chatName {
+      font-weight: 500;
+      color: #222;
+    }
+
+    .unread .chatName {
+      font-weight: 700;
+      color: var(--whisp-blue);
+    }
+
     .dot {
-      width: 10px; height: 10px; border-radius: 50%; background: #1a73e8;
+      width: 10px; height: 10px; border-radius: 50%;
+      background: var(--whisp-blue);
     }
 
-    /* Chat screen */
+    /* Chat Screen */
+    #chatHeader {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--whisp-blue);
+      color: white;
+      padding: 10px 16px;
+      border-radius: 12px;
+      margin-bottom: 10px;
+    }
+
     #messagesDiv {
-      height: 60vh; overflow-y: auto; background: white; padding: 10px;
-      border-radius: 10px; box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
-    }
-    .msg { max-width: 70%; margin: 6px 0; padding: 10px 14px; border-radius: 16px; }
-    .me { background: #d0e2ff; margin-left: auto; }
-    .them { background: #fff; border: 1px solid #ddd; }
-    .sender {
-      font-size: 0.8rem; color: #1a73e8; font-weight: 600; margin-bottom: 2px;
-    }
-    .timestamp {
-      text-align: right; font-size: 0.7rem; color: #777; margin-top: 2px;
+      height: 60vh;
+      overflow-y: auto;
+      background: white;
+      padding: 12px;
+      border-radius: 15px;
+      box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
+      display: flex;
+      flex-direction: column;
     }
 
-    /* Reply bar */
-    #replyBar {
-      background: #eef3ff; padding: 6px 10px; border-left: 3px solid #1a73e8;
-      display: none; align-items: center; justify-content: space-between;
-      border-radius: 8px; margin: 5px 0;
+    .msg {
+      max-width: 75%;
+      padding: 10px 14px;
+      margin: 6px 0;
+      border-radius: 18px;
+      word-wrap: break-word;
     }
+
+    .me {
+      background: var(--whisp-bubble-me);
+      margin-left: auto;
+      border-bottom-right-radius: 4px;
+    }
+
+    .them {
+      background: var(--whisp-bubble-them);
+      border: 1px solid #eee;
+      border-bottom-left-radius: 4px;
+    }
+
+    .sender {
+      font-size: 0.8rem;
+      color: var(--whisp-blue);
+      font-weight: 600;
+      margin-bottom: 2px;
+    }
+
+    .timestamp {
+      font-size: 0.7rem;
+      text-align: right;
+      color: #888;
+      margin-top: 3px;
+    }
+
+    /* Reply Bar */
+    #replyBar {
+      background: #f1f6ff;
+      border-left: 3px solid var(--whisp-blue);
+      border-radius: 10px;
+      padding: 6px 10px;
+      display: none;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 5px;
+    }
+
     #replyBar.show { display: flex; }
 
-    @media (max-width:500px){
-      #chatName { font-size: 1rem; }
+    /* Message Input Area */
+    #messageInputArea {
+      display: flex;
+      margin-top: 10px;
+      gap: 8px;
+    }
+
+    #message {
+      flex: 1;
+      border: 1px solid #ccc;
+      border-radius: 10px;
+      padding: 10px;
+    }
+
+    @media (max-width: 600px) {
+      #messagesDiv { height: 55vh; }
     }
   </style>
 </head>
@@ -63,27 +191,31 @@
 
   <!-- LOGIN -->
   <div id="loginScreen">
-    <h2>Welcome to Whisp 💬</h2>
+    <h2>Whisp 💬</h2>
     <form id="loginForm">
-      <input id="email" placeholder="Email" /><br><br>
-      <input id="password" type="password" placeholder="Password" /><br>
-      <label><input type="checkbox" id="showPass" /> Show Password</label><br><br>
-      <input id="username" placeholder="Username (for signup)" /><br><br>
-      <input type="submit" value="Login / Register" />
+      <input id="email" placeholder="Email" required />
+      <input id="password" type="password" placeholder="Password" required />
+      <label><input type="checkbox" id="showPass" /> Show Password</label>
+      <input id="username" placeholder="Username (for signup)" />
+      <button type="submit">Login / Register</button>
     </form>
   </div>
 
   <!-- CHATS LIST -->
   <div id="chatsScreen" class="hidden">
-    <h2>Chats</h2>
+    <h2>Your Chats</h2>
     <div id="chatList"></div>
     <button id="newChatBtn">New Chat</button>
   </div>
 
   <!-- CHAT -->
   <div id="chatScreen" class="hidden">
-    <button id="backBtn">⬅ Back</button>
-    <h2 id="chatName">Chat</h2>
+    <div id="chatHeader">
+      <button id="backBtn" style="background:none;border:none;color:white;font-size:1.2rem;">←</button>
+      <span id="chatName">Chat</span>
+      <span></span>
+    </div>
+
     <div id="messagesDiv"></div>
 
     <div id="replyBar">
@@ -91,8 +223,10 @@
       <button id="cancelReply">✖</button>
     </div>
 
-    <input id="message" placeholder="Type a message..." />
-    <button id="sendBtn">Send</button>
+    <div id="messageInputArea">
+      <input id="message" placeholder="Type a message..." />
+      <button id="sendBtn">Send</button>
+    </div>
   </div>
 
   <script type="module">
@@ -104,6 +238,7 @@
       getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged
     } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-auth.js";
 
+    // === FIREBASE CONFIG ===
     const firebaseConfig = {
       apiKey: "AIzaSyCEdtncZpDgOSnULIjopee7GKh9h9hveKk",
       authDomain: "messagingapp-7ede5.firebaseapp.com",
@@ -113,10 +248,12 @@
       messagingSenderId: "221896974865",
       appId: "1:221896974865:web:3faca4885e48ee656907b0"
     };
+
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
     const auth = getAuth(app);
 
+    // === ELEMENTS ===
     const loginScreen = document.getElementById("loginScreen");
     const chatsScreen = document.getElementById("chatsScreen");
     const chatScreen = document.getElementById("chatScreen");
@@ -128,15 +265,17 @@
     let chatMembers = {};
     let replyTo = null;
 
-    document.getElementById("showPass").onchange = e =>
-      document.getElementById("password").type = e.target.checked ? "text" : "password";
-
+    // === FUNCTIONS ===
     const show = scr => [loginScreen, chatsScreen, chatScreen].forEach(s => s.classList.add("hidden")) || scr.classList.remove("hidden");
+    document.getElementById("showPass").onchange = e => document.getElementById("password").type = e.target.checked ? "text" : "password";
 
-    // LOGIN / REGISTER
+    // LOGIN
     loginForm.onsubmit = async e => {
       e.preventDefault();
-      const email = email.value.trim(), pass = password.value, uname = username.value.trim();
+      const email = document.getElementById("email").value.trim();
+      const pass = document.getElementById("password").value;
+      const uname = document.getElementById("username").value.trim();
+
       try {
         let user;
         try {
@@ -150,6 +289,7 @@
       }
     };
 
+    // AUTH STATE
     onAuthStateChanged(auth, async (user) => {
       if (user) {
         currentUser = user;
@@ -175,14 +315,11 @@
           div.onclick = () => openChat(id, chat.name);
           div.innerHTML = `<span class="chatName">${chat.name}</span> <div class="dot hidden"></div>`;
           chatList.append(div);
-
-          // Watch for unread
           watchUnread(id, div);
         }
       });
     }
 
-    // Watch for unread messages
     async function watchUnread(chatId, div) {
       const dot = div.querySelector(".dot");
       const readRef = ref(db, "chats/" + chatId + "/read/" + currentUser.uid);
@@ -217,8 +354,7 @@
       document.getElementById("chatName").textContent = name;
       messagesDiv.innerHTML = "";
       show(chatScreen);
-
-      markChatRead(id); // clear unread flag
+      markChatRead(id);
 
       if (currentListenerRef) off(currentListenerRef);
 
@@ -251,14 +387,13 @@
 
       div.innerHTML = `
         ${senderLabel}
-        ${m.replyTo ? `<div style="font-size:0.85rem;color:#555;border-left:3px solid #1a73e8;padding-left:6px;margin-bottom:3px;">${m.replyTo}</div>` : ""}
+        ${m.replyTo ? `<div style="font-size:0.85rem;color:#555;border-left:3px solid var(--whisp-blue);padding-left:6px;margin-bottom:3px;">${m.replyTo}</div>` : ""}
         ${m.text}
         <div class="timestamp">${new Date(m.time).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}</div>
       `;
 
       messagesDiv.append(div);
       messagesDiv.scrollTop = messagesDiv.scrollHeight;
-
       div.onclick = () => showReplyBar(m.text);
     }
 
@@ -267,8 +402,7 @@
       const text = message.value.trim();
       if (!text || !currentChatId) return;
       const m = { text, sender: currentUser.uid, time: Date.now(), replyTo };
-      const msgRef = ref(db, "chats/" + currentChatId + "/messages");
-      await push(msgRef, m);
+      await push(ref(db, "chats/" + currentChatId + "/messages"), m);
       message.value = "";
       replyTo = null;
       document.getElementById("replyBar").classList.remove("show");
@@ -293,4 +427,3 @@
   </script>
 </body>
 </html>
-
