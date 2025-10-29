@@ -128,7 +128,7 @@ let currentChatIsGroup=false, chatMembers={};
 
 const show=(s)=>{[loginScreen,chatListScreen,chatScreen].forEach(e=>e.classList.remove("active"));s.classList.add("active");};
 
-// ✅ FIXED login handler
+// ✅ Login / Register
 document.getElementById("loginBtn").onclick = async () => {
   const emailVal = document.getElementById("email").value.trim();
   const passwordVal = document.getElementById("password").value.trim();
@@ -197,8 +197,11 @@ async function openChat(id,name){
     }
   }
 
-  // reset unread
-  await update(ref(db,"userChats/"+currentUser.uid+"/"+id), { unread:false });
+  // ✅ mark messages as read and set lastRead
+  await update(ref(db,"userChats/"+currentUser.uid+"/"+id), {
+    unread: false,
+    lastRead: Date.now()
+  });
 
   const msgRef=ref(db,"chats/"+id+"/messages");
   currentListenerRef=msgRef;
@@ -292,35 +295,48 @@ document.getElementById("dmBtn").onclick=async()=>{
   loadChats();
 };
 
-// ✅ Unread logic
-function listenForUnread(){
-  const userChatsRef = ref(db,"userChats/"+currentUser.uid);
-  onValue(userChatsRef,snap=>{
-    if(!snap.exists())return;
-    snap.forEach(child=>{
-      const chatId=child.key;
-      const data=child.val();
-      const chatDiv=[...chatList.children].find(d=>d.dataset.id===chatId);
-      if(chatDiv){
-        if(data.unread) chatDiv.classList.add("unread");
+// ✅ Unread + Notification Logic (fixed)
+function listenForUnread() {
+  const userChatsRef = ref(db, "userChats/" + currentUser.uid);
+
+  onValue(userChatsRef, snap => {
+    if (!snap.exists()) return;
+    snap.forEach(child => {
+      const chatId = child.key;
+      const data = child.val();
+      const chatDiv = [...chatList.children].find(d => d.dataset.id === chatId);
+      if (chatDiv) {
+        if (data.unread) chatDiv.classList.add("unread");
         else chatDiv.classList.remove("unread");
       }
     });
   });
 
-  // listen for new messages to mark unread
-  onValue(ref(db,"chats"),snap=>{
-    if(!snap.exists())return;
-    snap.forEach(chatSnap=>{
-      const chatId=chatSnap.key;
-      const chat=chatSnap.val();
-      if(!chat.members || !chat.members.includes(currentUser.uid)) return;
-      const msgRef=ref(db,"chats/"+chatId+"/messages");
-      onChildAdded(msgRef,msg=>{
-        const m=msg.val();
-        if(m.sender!==currentUser.uid && currentChatId!==chatId){
-          update(ref(db,"userChats/"+currentUser.uid+"/"+chatId),{unread:true});
-        }
+  // Listen for new messages to mark unread and show notification
+  onValue(ref(db, "chats"), snap => {
+    if (!snap.exists()) return;
+    snap.forEach(chatSnap => {
+      const chatId = chatSnap.key;
+      const chat = chatSnap.val();
+      if (!chat.members || !chat.members.includes(currentUser.uid)) return;
+
+      const msgRef = ref(db, "chats/" + chatId + "/messages");
+      onChildAdded(msgRef, msgSnap => {
+        const m = msgSnap.val();
+
+        // Skip self messages
+        if (m.sender === currentUser.uid) return;
+
+        // Check if message is newer than lastRead
+        get(ref(db, "userChats/" + currentUser.uid + "/" + chatId)).then(userChatSnap => {
+          const data = userChatSnap.val() || {};
+          const lastRead = data.lastRead || 0;
+
+          if (m.time > lastRead && currentChatId !== chatId) {
+            update(ref(db, "userChats/" + currentUser.uid + "/" + chatId), { unread: true });
+            showNotification(chat.name || "New message", m.text);
+          }
+        });
       });
     });
   });
