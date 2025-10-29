@@ -126,9 +126,13 @@ const loginScreen=document.getElementById("loginScreen"),
 let currentUser=null, currentChatId=null, replyTo=null, currentListenerRef=null;
 let currentChatIsGroup=false, chatMembers={};
 
+// this set tracks which chat message refs we have attached listeners to
+let activeMessageListeners = new Set();
+
+// helper to switch screens
 const show=(s)=>{[loginScreen,chatListScreen,chatScreen].forEach(e=>e.classList.remove("active"));s.classList.add("active");};
 
-// ✅ Login / Register
+// Login handler
 document.getElementById("loginBtn").onclick = async () => {
   const emailVal = document.getElementById("email").value.trim();
   const passwordVal = document.getElementById("password").value.trim();
@@ -150,10 +154,18 @@ document.getElementById("loginBtn").onclick = async () => {
 onAuthStateChanged(auth, async user => {
   if(user){
     currentUser=user;
+    // reset active listeners each time a user signs in
+    activeMessageListeners = new Set();
     await loadChats();
     show(chatListScreen);
     listenForUnread();
   } else {
+    // detach listeners if needed
+    currentUser=null;
+    activeMessageListeners.forEach(chatId => {
+      try { off(ref(db,"chats/"+chatId+"/messages")); } catch(_) {}
+    });
+    activeMessageListeners.clear();
     show(loginScreen);
   }
 });
@@ -182,7 +194,8 @@ async function openChat(id,name){
   messagesDiv.innerHTML="";
   show(chatScreen);
 
-  if(currentListenerRef){ off(currentListenerRef); }
+  // detach previous single-chat listener if any
+  if(currentListenerRef){ off(currentListenerRef); currentListenerRef=null; }
 
   const chatSnap=await get(ref(db,"chats/"+id));
   const chat=chatSnap.val();
@@ -197,12 +210,24 @@ async function openChat(id,name){
     }
   }
 
-  // ✅ mark messages as read and set lastRead
+  // mark messages as read and set lastRead
   await update(ref(db,"userChats/"+currentUser.uid+"/"+id), {
     unread: false,
     lastRead: Date.now()
   });
 
+  // close any existing system notifications for this chat (if service worker available)
+  if("serviceWorker" in navigator){
+    navigator.serviceWorker.getRegistration().then(reg=>{
+      if(!reg) return;
+      // getNotifications returns notifications created by this service worker
+      reg.getNotifications({ tag: id }).then(list=>{
+        list.forEach(n => n.close());
+      }).catch(()=>{});
+    }).catch(()=>{});
+  }
+
+  // listen for messages in this chat to render into UI
   const msgRef=ref(db,"chats/"+id+"/messages");
   currentListenerRef=msgRef;
   onChildAdded(msgRef,s=>renderMessage(s.val()));
@@ -234,7 +259,12 @@ function renderMessage(m){
   });
   div.onclick=()=>showReplyBar(m.text);
 
-  if(m.sender!==currentUser.uid) showNotification("New message",m.text);
+  // do not show push notification for messages sent by self
+  if(m.sender!==currentUser.uid){
+    // showNotification may be triggered by global listeners too,
+    // but the listener that calls it uses the currentChatId check
+    // so when rendering here we do not show another notification
+  }
 }
 
 function showReplyBar(text){
@@ -250,7 +280,7 @@ cancelReplyBtn.onclick=()=>{
 
 document.getElementById("sendBtn").onclick=async()=>{
   const text=messageInput.value.trim();
-  if(!text||!currentChatId)return;
+  if(!text||!currentChatId) return;
   await push(ref(db,"chats/"+currentChatId+"/messages"),{sender:currentUser.uid,text,replyTo,time:Date.now()});
   messageInput.value="";
   replyTo=null;
@@ -259,7 +289,7 @@ document.getElementById("sendBtn").onclick=async()=>{
 
 document.getElementById("backBtn").onclick=()=>{
   currentChatId=null;
-  if(currentListenerRef){off(currentListenerRef);}
+  if(currentListenerRef){off(currentListenerRef); currentListenerRef=null;}
   show(chatListScreen);
 };
 
@@ -295,60 +325,93 @@ document.getElementById("dmBtn").onclick=async()=>{
   loadChats();
 };
 
-// ✅ Unread + Notification Logic (fixed)
-function listenForUnread() {
-  const userChatsRef = ref(db, "userChats/" + currentUser.uid);
-
-  onValue(userChatsRef, snap => {
-    if (!snap.exists()) return;
-    snap.forEach(child => {
-      const chatId = child.key;
-      const data = child.val();
-      const chatDiv = [...chatList.children].find(d => d.dataset.id === chatId);
-      if (chatDiv) {
-        if (data.unread) chatDiv.classList.add("unread");
+// Fixed unread and notification logic
+function listenForUnread(){
+  // watch userChats to update UI unread markers
+  const userChatsRef = ref(db,"userChats/"+currentUser.uid);
+  onValue(userChatsRef,snap=>{
+    if(!snap.exists()) return;
+    snap.forEach(child=>{
+      const chatId=child.key;
+      const data=child.val();
+      const chatDiv=[...chatList.children].find(d=>d.dataset.id===chatId);
+      if(chatDiv){
+        if(data.unread) chatDiv.classList.add("unread");
         else chatDiv.classList.remove("unread");
       }
     });
   });
 
-  // Listen for new messages to mark unread and show notification
-  onValue(ref(db, "chats"), snap => {
-    if (!snap.exists()) return;
+  // iterate chats once and attach one message listener per chat
+  onValue(ref(db,"chats"), snap => {
+    if(!snap.exists()) return;
     snap.forEach(chatSnap => {
       const chatId = chatSnap.key;
       const chat = chatSnap.val();
-      if (!chat.members || !chat.members.includes(currentUser.uid)) return;
+      if(!chat.members || !chat.members.includes(currentUser.uid)) return;
 
-      const msgRef = ref(db, "chats/" + chatId + "/messages");
+      // attach only once per chat
+      if(activeMessageListeners.has(chatId)) return;
+      activeMessageListeners.add(chatId);
+
+      const msgRef = ref(db,"chats/"+chatId+"/messages");
       onChildAdded(msgRef, msgSnap => {
         const m = msgSnap.val();
 
-        // Skip self messages
-        if (m.sender === currentUser.uid) return;
+        // ignore our own messages
+        if(m.sender === currentUser.uid) return;
 
-        // Check if message is newer than lastRead
-        get(ref(db, "userChats/" + currentUser.uid + "/" + chatId)).then(userChatSnap => {
+        // check user's lastRead for this chat
+        get(ref(db,"userChats/"+currentUser.uid+"/"+chatId)).then(userChatSnap=>{
           const data = userChatSnap.val() || {};
           const lastRead = data.lastRead || 0;
 
-          if (m.time > lastRead && currentChatId !== chatId) {
-            update(ref(db, "userChats/" + currentUser.uid + "/" + chatId), { unread: true });
-            showNotification(chat.name || "New message", m.text);
+          // only mark unread and notify if message is newer than lastRead and chat not open
+          if(m.time > lastRead && currentChatId !== chatId){
+            update(ref(db,"userChats/"+currentUser.uid+"/"+chatId),{ unread:true });
+
+            // show push notification, using chatId as tag so notifications replace each other per chat
+            showNotification(chat.name || "New message", m.text, chatId);
           }
-        });
+        }).catch(()=>{});
       });
     });
   });
 }
 
-if("serviceWorker"in navigator){navigator.serviceWorker.register("sw.js").then(()=>Notification.requestPermission());}
-function showNotification(title,body){
-  if(!("Notification"in window))return;
-  if(Notification.permission==="granted"){
-    navigator.serviceWorker.ready.then(r=>r.showNotification(title,{body,icon:"https://cdn-icons-png.flaticon.com/512/906/906349.png"}));
+// service worker registration and permission
+if("serviceWorker" in navigator){
+  navigator.serviceWorker.register("sw.js").then(()=> {
+    if(Notification.permission !== "granted" && Notification.permission !== "denied"){
+      Notification.requestPermission();
+    }
+  }).catch(()=>{});
+}
+
+function showNotification(title, body, tag){
+  if(!("Notification" in window)) return;
+
+  // If service worker available, use it to show a notification with a tag.
+  if(Notification.permission === "granted" && "serviceWorker" in navigator){
+    navigator.serviceWorker.ready.then(reg => {
+      try {
+        reg.showNotification(title, {
+          body,
+          icon: "https://cdn-icons-png.flaticon.com/512/906/906349.png",
+          tag // tag groups notifications per chat so they replace instead of piling up
+        });
+      } catch(e){}
+    }).catch(()=>{});
+  } else if(Notification.permission !== "denied"){
+    // fallback to simple Notification if service worker not registered yet
+    Notification.requestPermission().then(p => {
+      if(p === "granted"){
+        try { new Notification(title, { body, icon: "https://cdn-icons-png.flaticon.com/512/906/906349.png", tag }); } catch(e) {}
+      }
+    });
   }
 }
 </script>
 </body>
 </html>
+
