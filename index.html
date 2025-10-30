@@ -1,96 +1,75 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Whisp</title>
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
 <style>
-:root{
-  --cream:#f7f3e8;
-  --accent:#223294;
-  --accent-contrast:#fff;
-  --muted:#6b6b6b;
-  --panel-border:rgba(34,50,148,0.08);
-  --bubble-other:#ffffff;
-  --bubble-other-border:rgba(0,0,0,0.06);
-}
+  html, body {margin:0;padding:0;height:100%;background:#e8f0fe;font-family:"Segoe UI", Roboto, sans-serif;}
+  main {height:100%;display:flex;flex-direction:column;}
 
-*{box-sizing:border-box}
-html,body{height:100%;margin:0;font-family:'Poppins',system-ui,Segoe UI,Roboto,sans-serif;background:var(--cream);color:#111}
-main{height:100%;display:flex;flex-direction:column;}
+  .screen{display:none;flex-direction:column;height:100%;}
+  .screen.active{display:flex;}
 
-/* screens */
-.screen{display:none;flex-direction:column;height:100%}
-.screen.active{display:flex}
+  /* Login */
+  #loginScreen{justify-content:center;align-items:center;background:#1a73e8;color:white;text-align:center;padding:20px;}
+  #loginScreen h2{font-size:2rem;margin-bottom:20px;}
+  #loginScreen input{display:block;width:80%;margin:8px auto;padding:10px;border-radius:8px;border:none;font-size:1rem;}
+  #loginBtn{background:#4285f4;color:white;border:none;padding:10px 20px;border-radius:8px;cursor:pointer;font-weight:600;box-shadow:0 2px 5px rgba(0,0,0,0.2);}
 
-/* login */
-#loginScreen{display:flex;justify-content:center;align-items:center;padding:24px}
-.login-card{width:100%;max-width:420px;background:#fff;border-radius:12px;box-shadow:0 8px 30px rgba(34,50,148,0.06);padding:28px}
-.brand{color:var(--accent);font-weight:700;font-size:1.75rem;margin-bottom:6px;text-align:center}
-.login-sub{color:var(--muted);margin-bottom:18px;text-align:center}
-.input{display:block;width:100%;padding:12px 14px;margin-bottom:12px;border-radius:10px;border:1px solid var(--panel-border);background:transparent;outline:none;font-size:0.95rem}
-#loginBtn{width:100%;padding:12px;border-radius:10px;border:none;background:var(--accent);color:var(--accent-contrast);font-weight:700;cursor:pointer}
+  /* Chat List */
+  #chatListScreen{background:#fff;flex:1;}
+  #chatListHeader{background:#1a73e8;color:white;padding:14px;display:flex;justify-content:space-between;align-items:center;font-weight:600;}
+  #chatList{flex:1;overflow-y:auto;padding-bottom:70px;}
+  .chatItem{padding:14px;border-bottom:1px solid #eee;cursor:pointer;transition:background 0.2s;}
+  .chatItem:hover{background:#f1f5ff;}
+  .chatItem.unread{font-weight:700;background:#e8f0fe;}
 
-/* chat list */
-#chatListScreen{flex:1;display:flex;flex-direction:column}
-#chatListHeader{background:var(--accent);color:var(--accent-contrast);padding:14px 16px;display:flex;justify-content:space-between;align-items:center;font-weight:600}
-#chatList{flex:1;overflow:auto;padding:8px 0;background:var(--cream)}
-.chatItem{padding:12px 16px;border-bottom:1px solid var(--panel-border);cursor:pointer;display:flex;justify-content:space-between;align-items:center;background:transparent}
-.chatItem:hover{background:rgba(34,50,148,0.03)}
-.chatItem.unread{font-weight:700;background:rgba(34,50,148,0.06);border-left:4px solid var(--accent);padding-left:12px}
+  /* Bottom Menu */
+  #bottomMenu{display:flex;justify-content:space-around;align-items:center;position:fixed;bottom:0;left:0;width:100%;background:#1a73e8;padding:10px 0;}
+  #bottomMenu button{background:#fff;border:none;color:#1a73e8;padding:8px 16px;border-radius:8px;font-weight:600;cursor:pointer;}
 
-/* bottom menu */
-#bottomMenu{display:flex;justify-content:space-around;align-items:center;position:fixed;bottom:0;left:0;width:100%;background:var(--accent);padding:10px 0;box-shadow:0 -8px 20px rgba(34,50,148,0.06)}
-#bottomMenu button{background:var(--cream);border:none;color:var(--accent);padding:8px 14px;border-radius:8px;font-weight:600;cursor:pointer}
+  /* Chat */
+  #chatScreen{background:#e8f0fe;}
+  #chatHeader{background:#1a73e8;color:white;padding:12px;display:flex;justify-content:space-between;align-items:center;}
+  #chatHeader button{background:none;border:none;color:white;font-size:1rem;cursor:pointer;}
+  #messages{flex:1;overflow-y:auto;padding:10px;display:flex;flex-direction:column;}
+  .msg{max-width:80%;margin-bottom:10px;padding:8px 12px;border-radius:10px;position:relative;word-wrap:break-word;}
+  .me{align-self:flex-end;background:#cfe2ff;}
+  .them{align-self:flex-start;background:#fff;}
+  .timestamp{font-size:0.75rem;color:#666;text-align:right;margin-top:2px;}
+  .sender{font-size:0.8rem;color:#1a73e8;font-weight:600;margin-bottom:2px;}
 
-/* chat screen */
-#chatScreen{display:flex;flex-direction:column;height:100%}
-#chatHeader{background:var(--accent);color:var(--accent-contrast);padding:12px 16px;display:flex;align-items:center;gap:12px}
-#chatHeader .back{background:none;border:none;color:var(--accent-contrast);font-size:1.1rem;cursor:pointer}
-#chatName{font-weight:700}
-#messages{flex:1;overflow:auto;padding:16px;display:flex;flex-direction:column;gap:8px;background:var(--cream)}
-.msg{max-width:78%;padding:10px 14px;border-radius:14px;word-wrap:break-word;line-height:1.3}
-.me{align-self:flex-end;background:var(--accent);color:var(--accent-contrast);box-shadow:0 6px 18px rgba(34,50,148,0.06)}
-.them{align-self:flex-start;background:var(--bubble-other);color:#111;border:1px solid var(--bubble-other-border)}
-.sender{font-size:0.8rem;color:var(--accent);font-weight:600;margin-bottom:6px}
-.reply-preview{font-size:0.85rem;color:#444;border-left:3px solid var(--accent);padding-left:8px;margin-bottom:8px;background:transparent}
-.timestamp{font-size:0.75rem;color:var(--muted);margin-top:6px;text-align:right}
+  /* Reply Bar */
+  #replyBar{display:none;background:#e3f2fd;padding:6px 10px;border-left:4px solid #1a73e8;font-size:0.9rem;align-items:center;display:flex;justify-content:space-between;}
+  #replyText{flex:1;}
+  #cancelReply{background:none;border:none;color:#1a73e8;font-weight:bold;cursor:pointer;margin-left:10px;}
 
-/* reply bar and input */
-#replyBar{display:none;padding:8px 12px;background:rgba(34,50,148,0.04);border-left:4px solid var(--accent);align-items:center;gap:8px}
-#replyText{flex:1;color:#222;font-size:0.95rem}
-#cancelReply{background:none;border:none;color:var(--accent);font-weight:600;cursor:pointer}
-#inputBar{display:flex;gap:8px;padding:10px;border-top:1px solid var(--panel-border);background:var(--cream);align-items:center}
-#message{flex:1;padding:12px;border-radius:999px;border:1px solid var(--panel-border);outline:none;background:#fff}
-#sendBtn{width:46px;height:46px;border-radius:999px;border:none;background:var(--accent);color:var(--accent-contrast);font-size:1.05rem;cursor:pointer}
+  #inputBar{display:flex;align-items:center;background:#fff;padding:8px;border-top:1px solid #ccc;}
+  #message{flex:1;padding:10px;border-radius:20px;border:1px solid #ccc;outline:none;}
+  #sendBtn{background:#1a73e8;color:white;border:none;border-radius:50%;width:42px;height:42px;margin-left:8px;font-size:1.2rem;cursor:pointer;}
 
-/* responsiveness */
-@media(min-width:700px){
-  main{max-width:760px;margin:30px auto;border-radius:12px;overflow:hidden;box-shadow:0 12px 40px rgba(34,50,148,0.06)}
-  #bottomMenu{position:static;border-top:1px solid var(--panel-border)}
-  .login-card{max-width:520px}
-}
+  @media (min-width:700px){
+    main{max-width:600px;margin:auto;border-radius:10px;overflow:hidden;}
+    #bottomMenu{position:static;border-top:1px solid #ccc;}
+  }
 </style>
 </head>
 <body>
 <main>
-  <!-- Login screen -->
   <section id="loginScreen" class="screen active">
-    <div class="login-card" role="form" aria-labelledby="brand">
-      <div id="brand" class="brand">Whisp</div>
-      <div class="login-sub">Sign in or register to continue</div>
-      <input id="email" class="input" placeholder="Email" inputmode="email">
-      <input id="password" class="input" type="password" placeholder="Password">
-      <input id="username" class="input" placeholder="Username (for signup)">
+    <div>
+      <h2>Welcome to Whisp 💬</h2>
+      <input id="email" placeholder="Email" />
+      <input id="password" type="password" placeholder="Password" />
+      <input id="username" placeholder="Username (for signup)" />
       <button id="loginBtn">Login / Register</button>
     </div>
   </section>
 
-  <!-- Chat list -->
   <section id="chatListScreen" class="screen">
     <div id="chatListHeader">Whisp Chats</div>
-    <div id="chatList" aria-live="polite"></div>
+    <div id="chatList"></div>
     <div id="bottomMenu">
       <button id="dmBtn">DM</button>
       <button id="groupBtn">Group</button>
@@ -98,19 +77,18 @@ main{height:100%;display:flex;flex-direction:column;}
     </div>
   </section>
 
-  <!-- Chat -->
-  <section id="chatScreen" class="screen" aria-live="polite">
+  <section id="chatScreen" class="screen">
     <div id="chatHeader">
-      <button id="backBtn" class="back">←</button>
+      <button id="backBtn">←</button>
       <span id="chatName">Chat</span>
     </div>
-    <div id="messages" role="log"></div>
+    <div id="messages"></div>
     <div id="replyBar">
       <span id="replyText"></span>
       <button id="cancelReply">✖</button>
     </div>
     <div id="inputBar">
-      <input id="message" placeholder="Type a message..." autocomplete="off">
+      <input id="message" placeholder="Type a message..." />
       <button id="sendBtn">➤</button>
     </div>
   </section>
@@ -135,7 +113,6 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getDatabase(app);
 
-/* UI refs */
 const loginScreen=document.getElementById("loginScreen"),
       chatListScreen=document.getElementById("chatListScreen"),
       chatScreen=document.getElementById("chatScreen"),
@@ -149,40 +126,55 @@ const loginScreen=document.getElementById("loginScreen"),
 let currentUser=null, currentChatId=null, replyTo=null, currentListenerRef=null;
 let currentChatIsGroup=false, chatMembers={};
 
+// this set tracks which chat message refs we have attached listeners to
+let activeMessageListeners = new Set();
+
+// helper to switch screens
 const show=(s)=>{[loginScreen,chatListScreen,chatScreen].forEach(e=>e.classList.remove("active"));s.classList.add("active");};
 
-/* login/register */
-document.getElementById("loginBtn").onclick=async()=>{
-  const email=document.getElementById("email").value.trim();
-  const pass=document.getElementById("password").value.trim();
-  const uname=document.getElementById("username").value.trim();
-  if(!email||!pass) return alert("Enter credentials");
-  try{
+// Login handler
+document.getElementById("loginBtn").onclick = async () => {
+  const emailVal = document.getElementById("email").value.trim();
+  const passwordVal = document.getElementById("password").value.trim();
+  const usernameVal = document.getElementById("username").value.trim();
+  if(!emailVal || !passwordVal) return alert("Enter credentials.");
+  try {
     let cred;
-    try{ cred=await signInWithEmailAndPassword(auth,email,pass); }
-    catch{ 
-      cred=await createUserWithEmailAndPassword(auth,email,pass);
-      await set(ref(db,"users/"+cred.user.uid),{username:uname||email.split("@")[0],email});
+    try {
+      cred = await signInWithEmailAndPassword(auth, emailVal, passwordVal);
+    } catch {
+      cred = await createUserWithEmailAndPassword(auth, emailVal, passwordVal);
+      await set(ref(db, "users/" + cred.user.uid), { username: usernameVal || emailVal.split("@")[0], email: emailVal });
     }
-  }catch(e){alert(e.message)}
+  } catch (e) {
+    alert(e.message);
+  }
 };
 
-/* auth listener */
-onAuthStateChanged(auth, async user=>{
+onAuthStateChanged(auth, async user => {
   if(user){
     currentUser=user;
+    // reset active listeners each time a user signs in
+    activeMessageListeners = new Set();
     await loadChats();
     show(chatListScreen);
     listenForUnread();
-  }else show(loginScreen);
+  } else {
+    // detach listeners if needed
+    currentUser=null;
+    activeMessageListeners.forEach(chatId => {
+      try { off(ref(db,"chats/"+chatId+"/messages")); } catch(_) {}
+    });
+    activeMessageListeners.clear();
+    show(loginScreen);
+  }
 });
 
-/* load chats */
 async function loadChats(){
   chatList.innerHTML="";
-  const chatsSnap=await get(ref(db,"chats"));
-  if(chatsSnap.exists()){
-    chatsSnap.forEach(c=>{
+  const chats=await get(ref(db,"chats"));
+  if(chats.exists()){
+    chats.forEach(c=>{
       const chat=c.val();
       if(chat.members && chat.members.includes(currentUser.uid)){
         const div=document.createElement("div");
@@ -196,59 +188,96 @@ async function loadChats(){
   }
 }
 
-/* open chat */
 async function openChat(id,name){
   currentChatId=id;
   document.getElementById("chatName").textContent=name;
   messagesDiv.innerHTML="";
   show(chatScreen);
-  if(currentListenerRef){ off(currentListenerRef); }
+
+  // detach previous single-chat listener if any
+  if(currentListenerRef){ off(currentListenerRef); currentListenerRef=null; }
 
   const chatSnap=await get(ref(db,"chats/"+id));
   const chat=chatSnap.val();
-  currentChatIsGroup=chat.isGroup||false;
+  currentChatIsGroup = chat.isGroup || false;
 
+  // load member usernames
   chatMembers={};
   if(chat.members){
     for(const uid of chat.members){
-      const uSnap=await get(ref(db,"users/"+uid));
-      if(uSnap.exists()) chatMembers[uid]=uSnap.val().username||"Unknown";
+      const uSnap = await get(ref(db,"users/"+uid));
+      if(uSnap.exists()) chatMembers[uid] = uSnap.val().username || "Unknown";
     }
   }
 
-  await update(ref(db,"userChats/"+currentUser.uid+"/"+id),{unread:false});
+  // mark messages as read and set lastRead
+  await update(ref(db,"userChats/"+currentUser.uid+"/"+id), {
+    unread: false,
+    lastRead: Date.now()
+  });
 
+  // close any existing system notifications for this chat (if service worker available)
+  if("serviceWorker" in navigator){
+    navigator.serviceWorker.getRegistration().then(reg=>{
+      if(!reg) return;
+      // getNotifications returns notifications created by this service worker
+      reg.getNotifications({ tag: id }).then(list=>{
+        list.forEach(n => n.close());
+      }).catch(()=>{});
+    }).catch(()=>{});
+  }
+
+  // listen for messages in this chat to render into UI
   const msgRef=ref(db,"chats/"+id+"/messages");
   currentListenerRef=msgRef;
   onChildAdded(msgRef,s=>renderMessage(s.val()));
 }
 
-/* render message */
 function renderMessage(m){
   const div=document.createElement("div");
   div.classList.add("msg",m.sender===currentUser.uid?"me":"them");
+
   let senderLabel="";
   if(currentChatIsGroup && m.sender!==currentUser.uid){
-    senderLabel=`<div class="sender">${chatMembers[m.sender]||"Unknown"}</div>`;
+    const uname=chatMembers[m.sender]||"Unknown";
+    senderLabel=`<div class="sender">${uname}</div>`;
   }
+
   div.innerHTML=`
     ${senderLabel}
-    ${m.replyTo?`<div class="reply-preview">${m.replyTo}</div>`:""}
+    ${m.replyTo?`<div style="font-size:0.85rem;color:#555;border-left:3px solid #1a73e8;padding-left:6px;margin-bottom:3px;">${m.replyTo}</div>`:""}
     ${m.text}
     <div class="timestamp">${new Date(m.time).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}</div>
   `;
   messagesDiv.append(div);
   messagesDiv.scrollTop=messagesDiv.scrollHeight;
 
+  div.addEventListener("touchstart",e=>div.startX=e.touches[0].clientX);
+  div.addEventListener("touchmove",e=>{
+    const diff=e.touches[0].clientX-div.startX;
+    if(diff>70)showReplyBar(m.text);
+  });
   div.onclick=()=>showReplyBar(m.text);
-  if(m.sender!==currentUser.uid) showNotification("New message",m.text);
+
+  // do not show push notification for messages sent by self
+  if(m.sender!==currentUser.uid){
+    // showNotification may be triggered by global listeners too,
+    // but the listener that calls it uses the currentChatId check
+    // so when rendering here we do not show another notification
+  }
 }
 
-/* reply bar */
-function showReplyBar(text){ replyTo=text; replyBar.style.display="flex"; replyText.textContent="Replying: "+text.slice(0,40); }
-cancelReplyBtn.onclick=()=>{replyTo=null;replyBar.style.display="none";};
+function showReplyBar(text){
+  replyTo=text;
+  replyBar.style.display="flex";
+  replyText.textContent="Replying to: "+text.slice(0,40);
+}
 
-/* send */
+cancelReplyBtn.onclick=()=>{
+  replyTo=null;
+  replyBar.style.display="none";
+};
+
 document.getElementById("sendBtn").onclick=async()=>{
   const text=messageInput.value.trim();
   if(!text||!currentChatId) return;
@@ -258,73 +287,131 @@ document.getElementById("sendBtn").onclick=async()=>{
   replyBar.style.display="none";
 };
 
-/* back and logout */
 document.getElementById("backBtn").onclick=()=>{
-  currentChatId=null; if(currentListenerRef) off(currentListenerRef); show(chatListScreen);
-};
-document.getElementById("logoutBtn").onclick=async()=>{
-  await signOut(auth); currentUser=null; show(loginScreen);
+  currentChatId=null;
+  if(currentListenerRef){off(currentListenerRef); currentListenerRef=null;}
+  show(chatListScreen);
 };
 
-/* group & DM */
+document.getElementById("logoutBtn").onclick=async()=>{
+  await signOut(auth);
+  currentUser=null;
+  show(loginScreen);
+};
+
 document.getElementById("groupBtn").onclick=async()=>{
-  const name=prompt("Group name:"); if(!name)return;
+  const name=prompt("Group name:");if(!name)return;
   const input=prompt("Enter usernames (comma-separated):");
   const usernames=input?input.split(",").map(u=>u.trim()):[];
   const usersSnap=await get(ref(db,"users"));
   const memberIds=[currentUser.uid];
-  usersSnap.forEach(u=>{if(usernames.includes(u.val().username)) memberIds.push(u.key);});
+  usersSnap.forEach(u=>{
+    const val=u.val();
+    if(usernames.includes(val.username))memberIds.push(u.key);
+  });
   const refNew=push(ref(db,"chats"));
   await set(refNew,{name,isGroup:true,members:memberIds});
   loadChats();
 };
+
 document.getElementById("dmBtn").onclick=async()=>{
-  const uname=prompt("Username to DM:"); if(!uname)return;
-  const users=await get(ref(db,"users")); let uid=null;
-  users.forEach(u=>{if(u.val().username===uname) uid=u.key;});
-  if(!uid) return alert("User not found");
+  const uname=prompt("Username to DM:");
+  const users=await get(ref(db,"users"));
+  let uid=null;
+  users.forEach(u=>{if(u.val().username===uname)uid=u.key;});
+  if(!uid)return alert("User not found.");
   const refNew=push(ref(db,"chats"));
   await set(refNew,{name:uname,isGroup:false,members:[currentUser.uid,uid]});
   loadChats();
 };
 
-/* unread logic */
+// Fixed unread and notification logic
 function listenForUnread(){
-  const userChatsRef=ref(db,"userChats/"+currentUser.uid);
+  // watch userChats to update UI unread markers
+  const userChatsRef = ref(db,"userChats/"+currentUser.uid);
   onValue(userChatsRef,snap=>{
-    if(!snap.exists())return;
+    if(!snap.exists()) return;
     snap.forEach(child=>{
       const chatId=child.key;
       const data=child.val();
       const chatDiv=[...chatList.children].find(d=>d.dataset.id===chatId);
-      if(chatDiv){ if(data.unread) chatDiv.classList.add("unread"); else chatDiv.classList.remove("unread"); }
+      if(chatDiv){
+        if(data.unread) chatDiv.classList.add("unread");
+        else chatDiv.classList.remove("unread");
+      }
     });
   });
 
-  onValue(ref(db,"chats"),snap=>{
+  // iterate chats once and attach one message listener per chat
+  onValue(ref(db,"chats"), snap => {
     if(!snap.exists()) return;
-    snap.forEach(chatSnap=>{
-      const chatId=chatSnap.key; const chat=chatSnap.val();
-      if(!chat.members||!chat.members.includes(currentUser.uid)) return;
-      const msgRef=ref(db,"chats/"+chatId+"/messages");
-      onChildAdded(msgRef,msg=>{
-        const m=msg.val();
-        if(m.sender!==currentUser.uid && currentChatId!==chatId){
-          update(ref(db,"userChats/"+currentUser.uid+"/"+chatId),{unread:true});
-        }
+    snap.forEach(chatSnap => {
+      const chatId = chatSnap.key;
+      const chat = chatSnap.val();
+      if(!chat.members || !chat.members.includes(currentUser.uid)) return;
+
+      // attach only once per chat
+      if(activeMessageListeners.has(chatId)) return;
+      activeMessageListeners.add(chatId);
+
+      const msgRef = ref(db,"chats/"+chatId+"/messages");
+      onChildAdded(msgRef, msgSnap => {
+        const m = msgSnap.val();
+
+        // ignore our own messages
+        if(m.sender === currentUser.uid) return;
+
+        // check user's lastRead for this chat
+        get(ref(db,"userChats/"+currentUser.uid+"/"+chatId)).then(userChatSnap=>{
+          const data = userChatSnap.val() || {};
+          const lastRead = data.lastRead || 0;
+
+          // only mark unread and notify if message is newer than lastRead and chat not open
+          if(m.time > lastRead && currentChatId !== chatId){
+            update(ref(db,"userChats/"+currentUser.uid+"/"+chatId),{ unread:true });
+
+            // show push notification, using chatId as tag so notifications replace each other per chat
+            showNotification(chat.name || "New message", m.text, chatId);
+          }
+        }).catch(()=>{});
       });
     });
   });
 }
 
-/* service worker & notifications */
-if("serviceWorker"in navigator){navigator.serviceWorker.register("sw.js").then(()=>Notification.requestPermission());}
-function showNotification(title,body){
-  if(!("Notification"in window))return;
-  if(Notification.permission==="granted"){
-    navigator.serviceWorker.ready.then(r=>r.showNotification(title,{body,icon:"https://cdn-icons-png.flaticon.com/512/906/906349.png"}));
+// service worker registration and permission
+if("serviceWorker" in navigator){
+  navigator.serviceWorker.register("sw.js").then(()=> {
+    if(Notification.permission !== "granted" && Notification.permission !== "denied"){
+      Notification.requestPermission();
+    }
+  }).catch(()=>{});
+}
+
+function showNotification(title, body, tag){
+  if(!("Notification" in window)) return;
+
+  // If service worker available, use it to show a notification with a tag.
+  if(Notification.permission === "granted" && "serviceWorker" in navigator){
+    navigator.serviceWorker.ready.then(reg => {
+      try {
+        reg.showNotification(title, {
+          body,
+          icon: "https://cdn-icons-png.flaticon.com/512/906/906349.png",
+          tag // tag groups notifications per chat so they replace instead of piling up
+        });
+      } catch(e){}
+    }).catch(()=>{});
+  } else if(Notification.permission !== "denied"){
+    // fallback to simple Notification if service worker not registered yet
+    Notification.requestPermission().then(p => {
+      if(p === "granted"){
+        try { new Notification(title, { body, icon: "https://cdn-icons-png.flaticon.com/512/906/906349.png", tag }); } catch(e) {}
+      }
+    });
   }
 }
 </script>
 </body>
 </html>
+
