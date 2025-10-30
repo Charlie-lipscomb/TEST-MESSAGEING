@@ -1,26 +1,23 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Whisp</title>
-
-<!-- Poppins font for a clean look -->
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
-
 <style>
 :root{
-  --cream: #f7f3e8;
-  --accent: #223294;
-  --accent-contrast: #ffffff;
-  --muted: #6b6b6b;
-  --panel-border: rgba(34,50,148,0.08);
-  --bubble-other: #ffffff;
-  --bubble-other-border: rgba(0,0,0,0.06);
+  --cream:#f7f3e8;
+  --accent:#223294;
+  --accent-contrast:#fff;
+  --muted:#6b6b6b;
+  --panel-border:rgba(34,50,148,0.08);
+  --bubble-other:#ffffff;
+  --bubble-other-border:rgba(0,0,0,0.06);
 }
 
 *{box-sizing:border-box}
-html,body{height:100%;margin:0;background:var(--cream);font-family:'Poppins',system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial; color:#111}
+html,body{height:100%;margin:0;font-family:'Poppins',system-ui,Segoe UI,Roboto,sans-serif;background:var(--cream);color:#111}
 main{height:100%;display:flex;flex-direction:column;}
 
 /* screens */
@@ -28,15 +25,15 @@ main{height:100%;display:flex;flex-direction:column;}
 .screen.active{display:flex}
 
 /* login */
-#loginScreen{justify-content:center;align-items:center;padding:24px}
+#loginScreen{display:flex;justify-content:center;align-items:center;padding:24px}
 .login-card{width:100%;max-width:420px;background:#fff;border-radius:12px;box-shadow:0 8px 30px rgba(34,50,148,0.06);padding:28px}
-.brand{color:var(--accent);font-weight:700;font-size:1.75rem;margin-bottom:6px}
-.login-sub{color:var(--muted);margin-bottom:18px}
+.brand{color:var(--accent);font-weight:700;font-size:1.75rem;margin-bottom:6px;text-align:center}
+.login-sub{color:var(--muted);margin-bottom:18px;text-align:center}
 .input{display:block;width:100%;padding:12px 14px;margin-bottom:12px;border-radius:10px;border:1px solid var(--panel-border);background:transparent;outline:none;font-size:0.95rem}
 #loginBtn{width:100%;padding:12px;border-radius:10px;border:none;background:var(--accent);color:var(--accent-contrast);font-weight:700;cursor:pointer}
 
 /* chat list */
-#chatListScreen{background:var(--cream);flex:1;display:flex;flex-direction:column}
+#chatListScreen{flex:1;display:flex;flex-direction:column}
 #chatListHeader{background:var(--accent);color:var(--accent-contrast);padding:14px 16px;display:flex;justify-content:space-between;align-items:center;font-weight:600}
 #chatList{flex:1;overflow:auto;padding:8px 0;background:var(--cream)}
 .chatItem{padding:12px 16px;border-bottom:1px solid var(--panel-border);cursor:pointer;display:flex;justify-content:space-between;align-items:center;background:transparent}
@@ -48,7 +45,7 @@ main{height:100%;display:flex;flex-direction:column;}
 #bottomMenu button{background:var(--cream);border:none;color:var(--accent);padding:8px 14px;border-radius:8px;font-weight:600;cursor:pointer}
 
 /* chat screen */
-#chatScreen{display:flex;flex-direction:column;height:100%;background:var(--cream)}
+#chatScreen{display:flex;flex-direction:column;height:100%}
 #chatHeader{background:var(--accent);color:var(--accent-contrast);padding:12px 16px;display:flex;align-items:center;gap:12px}
 #chatHeader .back{background:none;border:none;color:var(--accent-contrast);font-size:1.1rem;cursor:pointer}
 #chatName{font-weight:700}
@@ -83,9 +80,9 @@ main{height:100%;display:flex;flex-direction:column;}
     <div class="login-card" role="form" aria-labelledby="brand">
       <div id="brand" class="brand">Whisp</div>
       <div class="login-sub">Sign in or register to continue</div>
-      <input id="email" class="input" placeholder="Email" inputmode="email" />
-      <input id="password" class="input" type="password" placeholder="Password" />
-      <input id="username" class="input" placeholder="Username (for signup)" />
+      <input id="email" class="input" placeholder="Email" inputmode="email">
+      <input id="password" class="input" type="password" placeholder="Password">
+      <input id="username" class="input" placeholder="Username (for signup)">
       <button id="loginBtn">Login / Register</button>
     </div>
   </section>
@@ -107,23 +104,19 @@ main{height:100%;display:flex;flex-direction:column;}
       <button id="backBtn" class="back">←</button>
       <span id="chatName">Chat</span>
     </div>
-
     <div id="messages" role="log"></div>
-
     <div id="replyBar">
       <span id="replyText"></span>
       <button id="cancelReply">✖</button>
     </div>
-
     <div id="inputBar">
-      <input id="message" placeholder="Type a message..." autocomplete="off" />
+      <input id="message" placeholder="Type a message..." autocomplete="off">
       <button id="sendBtn">➤</button>
     </div>
   </section>
 </main>
 
 <script type="module">
-/* Replace with your Firebase config */
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
 import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
 import { getDatabase, ref, set, push, get, onChildAdded, onValue, off, update } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
@@ -137,323 +130,200 @@ const firebaseConfig = {
   messagingSenderId: "221896974865",
   appId: "1:221896974865:web:3faca4885e48ee656907b0"
 };
-  
+
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getDatabase(app);
 
 /* UI refs */
-const loginScreen = document.getElementById("loginScreen");
-const chatListScreen = document.getElementById("chatListScreen");
-const chatScreen = document.getElementById("chatScreen");
-const chatList = document.getElementById("chatList");
-const messagesDiv = document.getElementById("messages");
-const replyBar = document.getElementById("replyBar");
-const replyText = document.getElementById("replyText");
-const cancelReplyBtn = document.getElementById("cancelReply");
-const messageInput = document.getElementById("message");
+const loginScreen=document.getElementById("loginScreen"),
+      chatListScreen=document.getElementById("chatListScreen"),
+      chatScreen=document.getElementById("chatScreen"),
+      chatList=document.getElementById("chatList"),
+      messagesDiv=document.getElementById("messages"),
+      replyBar=document.getElementById("replyBar"),
+      replyText=document.getElementById("replyText"),
+      cancelReplyBtn=document.getElementById("cancelReply"),
+      messageInput=document.getElementById("message");
 
-let currentUser = null;
-let currentChatId = null;
-let replyTo = null;
-let currentListenerRef = null;
-let currentChatIsGroup = false;
-let chatMembers = {};
+let currentUser=null, currentChatId=null, replyTo=null, currentListenerRef=null;
+let currentChatIsGroup=false, chatMembers={};
 
-// tracks which chat message refs we have attached listeners to
-let activeMessageListeners = new Set();
+const show=(s)=>{[loginScreen,chatListScreen,chatScreen].forEach(e=>e.classList.remove("active"));s.classList.add("active");};
 
-const show = (s) => { [loginScreen, chatListScreen, chatScreen].forEach(e=>e.classList.remove("active")); s.classList.add("active"); };
-
-/* Login / Register */
-document.getElementById("loginBtn").onclick = async () => {
-  const emailVal = document.getElementById("email").value.trim();
-  const passwordVal = document.getElementById("password").value.trim();
-  const usernameVal = document.getElementById("username").value.trim();
-  if(!emailVal || !passwordVal) return alert("Enter credentials.");
-  try {
+/* login/register */
+document.getElementById("loginBtn").onclick=async()=>{
+  const email=document.getElementById("email").value.trim();
+  const pass=document.getElementById("password").value.trim();
+  const uname=document.getElementById("username").value.trim();
+  if(!email||!pass) return alert("Enter credentials");
+  try{
     let cred;
-    try {
-      cred = await signInWithEmailAndPassword(auth, emailVal, passwordVal);
-    } catch {
-      cred = await createUserWithEmailAndPassword(auth, emailVal, passwordVal);
-      await set(ref(db, "users/" + cred.user.uid), { username: usernameVal || emailVal.split("@")[0], email: emailVal });
+    try{ cred=await signInWithEmailAndPassword(auth,email,pass); }
+    catch{ 
+      cred=await createUserWithEmailAndPassword(auth,email,pass);
+      await set(ref(db,"users/"+cred.user.uid),{username:uname||email.split("@")[0],email});
     }
-  } catch (e) {
-    alert(e.message);
-  }
+  }catch(e){alert(e.message)}
 };
 
-/* Auth state */
-onAuthStateChanged(auth, async user => {
+/* auth listener */
+onAuthStateChanged(auth, async user=>{
   if(user){
-    currentUser = user;
-    activeMessageListeners = new Set(); // reset listeners for this user
+    currentUser=user;
     await loadChats();
     show(chatListScreen);
     listenForUnread();
-  } else {
-    // detach listeners on logout
-    currentUser = null;
-    activeMessageListeners.forEach(chatId => {
-      try { off(ref(db,"chats/"+chatId+"/messages")); } catch(_) {}
-    });
-    activeMessageListeners.clear();
-    show(loginScreen);
-  }
+  }else show(loginScreen);
 });
 
-/* Load chats */
+/* load chats */
 async function loadChats(){
-  chatList.innerHTML = "";
-  const chats = await get(ref(db,"chats"));
-  if(chats.exists()){
-    chats.forEach(c => {
-      const chat = c.val();
+  chatList.innerHTML="";
+  const chatsSnap=await get(ref(db,"chats"));
+  if(chatsSnap.exists()){
+    chatsSnap.forEach(c=>{
+      const chat=c.val();
       if(chat.members && chat.members.includes(currentUser.uid)){
-        const div = document.createElement("div");
-        div.className = "chatItem";
-        div.dataset.id = c.key;
-        div.textContent = chat.name;
-        div.onclick = () => openChat(c.key, chat.name);
+        const div=document.createElement("div");
+        div.className="chatItem";
+        div.dataset.id=c.key;
+        div.textContent=chat.name;
+        div.onclick=()=>openChat(c.key,chat.name);
         chatList.append(div);
       }
     });
   }
 }
 
-/* Open chat */
-async function openChat(id, name){
-  currentChatId = id;
-  document.getElementById("chatName").textContent = name;
-  messagesDiv.innerHTML = "";
+/* open chat */
+async function openChat(id,name){
+  currentChatId=id;
+  document.getElementById("chatName").textContent=name;
+  messagesDiv.innerHTML="";
   show(chatScreen);
+  if(currentListenerRef){ off(currentListenerRef); }
 
-  // detach previous single-chat listener
-  if(currentListenerRef){ off(currentListenerRef); currentListenerRef = null; }
+  const chatSnap=await get(ref(db,"chats/"+id));
+  const chat=chatSnap.val();
+  currentChatIsGroup=chat.isGroup||false;
 
-  const chatSnap = await get(ref(db,"chats/"+id));
-  const chat = chatSnap.val() || {};
-  currentChatIsGroup = chat.isGroup || false;
-
-  // load member usernames
-  chatMembers = {};
+  chatMembers={};
   if(chat.members){
     for(const uid of chat.members){
-      const uSnap = await get(ref(db,"users/"+uid));
-      if(uSnap.exists()) chatMembers[uid] = uSnap.val().username || "Unknown";
+      const uSnap=await get(ref(db,"users/"+uid));
+      if(uSnap.exists()) chatMembers[uid]=uSnap.val().username||"Unknown";
     }
   }
 
-  // mark as read and set lastRead
-  await update(ref(db,"userChats/"+currentUser.uid+"/"+id), {
-    unread: false,
-    lastRead: Date.now()
-  });
+  await update(ref(db,"userChats/"+currentUser.uid+"/"+id),{unread:false});
 
-  // close SW notifications for this chat if available
-  if("serviceWorker" in navigator){
-    navigator.serviceWorker.getRegistration().then(reg => {
-      if(!reg) return;
-      // close notifications with this tag
-      reg.getNotifications({ tag: id }).then(list => {
-        list.forEach(n => n.close());
-      }).catch(()=>{});
-      // also notify sw to clear if it wants to
-      if(reg.active && reg.active.state !== 'redundant'){
-        reg.active.postMessage({ type: "CLEAR_CHAT_NOTIFICATIONS", chatId: id });
-      }
-    }).catch(()=>{});
-  }
-
-  // listen for messages in this chat (render)
-  const msgRef = ref(db,"chats/"+id+"/messages");
-  currentListenerRef = msgRef;
-  onChildAdded(msgRef, s => renderMessage(s.val()));
+  const msgRef=ref(db,"chats/"+id+"/messages");
+  currentListenerRef=msgRef;
+  onChildAdded(msgRef,s=>renderMessage(s.val()));
 }
 
-/* Render a single message */
+/* render message */
 function renderMessage(m){
-  const div = document.createElement("div");
-  div.classList.add("msg", m.sender === currentUser.uid ? "me" : "them");
-
-  let senderLabel = "";
-  if(currentChatIsGroup && m.sender !== currentUser.uid){
-    const uname = chatMembers[m.sender] || "Unknown";
-    senderLabel = `<div class="sender">${uname}</div>`;
+  const div=document.createElement("div");
+  div.classList.add("msg",m.sender===currentUser.uid?"me":"them");
+  let senderLabel="";
+  if(currentChatIsGroup && m.sender!==currentUser.uid){
+    senderLabel=`<div class="sender">${chatMembers[m.sender]||"Unknown"}</div>`;
   }
-
-  const replyHtml = m.replyTo ? `<div class="reply-preview">${m.replyTo}</div>` : "";
-
-  div.innerHTML = `
+  div.innerHTML=`
     ${senderLabel}
-    ${replyHtml}
-    <div>${escapeHtml(m.text)}</div>
+    ${m.replyTo?`<div class="reply-preview">${m.replyTo}</div>`:""}
+    ${m.text}
     <div class="timestamp">${new Date(m.time).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}</div>
   `;
   messagesDiv.append(div);
-  messagesDiv.scrollTop = messagesDiv.scrollHeight;
+  messagesDiv.scrollTop=messagesDiv.scrollHeight;
 
-  div.addEventListener("touchstart", e => div.startX = e.touches[0].clientX);
-  div.addEventListener("touchmove", e => {
-    const diff = e.touches[0].clientX - div.startX;
-    if(diff > 70) showReplyBar(m.text);
-  });
-  div.onclick = () => showReplyBar(m.text);
+  div.onclick=()=>showReplyBar(m.text);
+  if(m.sender!==currentUser.uid) showNotification("New message",m.text);
 }
 
-/* reply preview */
-function showReplyBar(text){
-  replyTo = text;
-  replyBar.style.display = "flex";
-  replyText.textContent = "Replying to: " + text.slice(0,80);
-}
+/* reply bar */
+function showReplyBar(text){ replyTo=text; replyBar.style.display="flex"; replyText.textContent="Replying: "+text.slice(0,40); }
+cancelReplyBtn.onclick=()=>{replyTo=null;replyBar.style.display="none";};
 
-cancelReplyBtn.onclick = () => {
-  replyTo = null;
-  replyBar.style.display = "none";
+/* send */
+document.getElementById("sendBtn").onclick=async()=>{
+  const text=messageInput.value.trim();
+  if(!text||!currentChatId) return;
+  await push(ref(db,"chats/"+currentChatId+"/messages"),{sender:currentUser.uid,text,replyTo,time:Date.now()});
+  messageInput.value="";
+  replyTo=null;
+  replyBar.style.display="none";
 };
 
-/* send message */
-document.getElementById("sendBtn").onclick = async () => {
-  const text = messageInput.value.trim();
-  if(!text || !currentChatId) return;
-  await push(ref(db,"chats/"+currentChatId+"/messages"), { sender: currentUser.uid, text, replyTo, time: Date.now() });
-  messageInput.value = "";
-  replyTo = null;
-  replyBar.style.display = "none";
+/* back and logout */
+document.getElementById("backBtn").onclick=()=>{
+  currentChatId=null; if(currentListenerRef) off(currentListenerRef); show(chatListScreen);
+};
+document.getElementById("logoutBtn").onclick=async()=>{
+  await signOut(auth); currentUser=null; show(loginScreen);
 };
 
-/* back */
-document.getElementById("backBtn").onclick = () => {
-  currentChatId = null;
-  if(currentListenerRef){ off(currentListenerRef); currentListenerRef = null; }
-  show(chatListScreen);
+/* group & DM */
+document.getElementById("groupBtn").onclick=async()=>{
+  const name=prompt("Group name:"); if(!name)return;
+  const input=prompt("Enter usernames (comma-separated):");
+  const usernames=input?input.split(",").map(u=>u.trim()):[];
+  const usersSnap=await get(ref(db,"users"));
+  const memberIds=[currentUser.uid];
+  usersSnap.forEach(u=>{if(usernames.includes(u.val().username)) memberIds.push(u.key);});
+  const refNew=push(ref(db,"chats"));
+  await set(refNew,{name,isGroup:true,members:memberIds});
+  loadChats();
 };
-
-/* logout */
-document.getElementById("logoutBtn").onclick = async () => {
-  await signOut(auth);
-  currentUser = null;
-  show(loginScreen);
-};
-
-/* create group */
-document.getElementById("groupBtn").onclick = async () => {
-  const name = prompt("Group name:"); if(!name) return;
-  const input = prompt("Enter usernames (comma-separated):");
-  const usernames = input ? input.split(",").map(u=>u.trim()) : [];
-  const usersSnap = await get(ref(db,"users"));
-  const memberIds = [currentUser.uid];
-  usersSnap.forEach(u => {
-    const val = u.val();
-    if(usernames.includes(val.username)) memberIds.push(u.key);
-  });
-  const refNew = push(ref(db,"chats"));
-  await set(refNew, { name, isGroup: true, members: memberIds });
+document.getElementById("dmBtn").onclick=async()=>{
+  const uname=prompt("Username to DM:"); if(!uname)return;
+  const users=await get(ref(db,"users")); let uid=null;
+  users.forEach(u=>{if(u.val().username===uname) uid=u.key;});
+  if(!uid) return alert("User not found");
+  const refNew=push(ref(db,"chats"));
+  await set(refNew,{name:uname,isGroup:false,members:[currentUser.uid,uid]});
   loadChats();
 };
 
-/* DM */
-document.getElementById("dmBtn").onclick = async () => {
-  const uname = prompt("Username to DM:");
-  const users = await get(ref(db,"users"));
-  let uid = null;
-  users.forEach(u => { if(u.val().username === uname) uid = u.key; });
-  if(!uid) return alert("User not found.");
-  const refNew = push(ref(db,"chats"));
-  await set(refNew, { name: uname, isGroup: false, members: [currentUser.uid, uid] });
-  loadChats();
-};
-
-/* unread & notifications - one listener per chat only */
+/* unread logic */
 function listenForUnread(){
-  // show unread markers from userChats
-  const userChatsRef = ref(db,"userChats/"+currentUser.uid);
-  onValue(userChatsRef, snap => {
-    if(!snap.exists()) return;
-    snap.forEach(child => {
-      const chatId = child.key;
-      const data = child.val();
-      const chatDiv = [...chatList.children].find(d => d.dataset.id === chatId);
-      if(chatDiv){
-        if(data.unread) chatDiv.classList.add("unread");
-        else chatDiv.classList.remove("unread");
-      }
+  const userChatsRef=ref(db,"userChats/"+currentUser.uid);
+  onValue(userChatsRef,snap=>{
+    if(!snap.exists())return;
+    snap.forEach(child=>{
+      const chatId=child.key;
+      const data=child.val();
+      const chatDiv=[...chatList.children].find(d=>d.dataset.id===chatId);
+      if(chatDiv){ if(data.unread) chatDiv.classList.add("unread"); else chatDiv.classList.remove("unread"); }
     });
   });
 
-  // attach one listener per chat to detect new messages
-  onValue(ref(db,"chats"), snap => {
+  onValue(ref(db,"chats"),snap=>{
     if(!snap.exists()) return;
-    snap.forEach(chatSnap => {
-      const chatId = chatSnap.key;
-      const chat = chatSnap.val();
-      if(!chat.members || !chat.members.includes(currentUser.uid)) return;
-
-      if(activeMessageListeners.has(chatId)) return;
-      activeMessageListeners.add(chatId);
-
-      const msgRef = ref(db,"chats/"+chatId+"/messages");
-      onChildAdded(msgRef, msgSnap => {
-        const m = msgSnap.val();
-        if(!m) return;
-        // ignore our own messages
-        if(m.sender === currentUser.uid) return;
-
-        // check lastRead
-        get(ref(db,"userChats/"+currentUser.uid+"/"+chatId)).then(userChatSnap => {
-          const data = userChatSnap.val() || {};
-          const lastRead = data.lastRead || 0;
-
-          if(m.time > lastRead && currentChatId !== chatId){
-            // mark unread for visual badge
-            update(ref(db,"userChats/"+currentUser.uid+"/"+chatId), { unread: true }).catch(()=>{});
-            // show push notification; use chatId as tag so they replace per chat
-            showNotification(chat.name || "New message", m.text, chatId);
-          }
-        }).catch(()=>{});
+    snap.forEach(chatSnap=>{
+      const chatId=chatSnap.key; const chat=chatSnap.val();
+      if(!chat.members||!chat.members.includes(currentUser.uid)) return;
+      const msgRef=ref(db,"chats/"+chatId+"/messages");
+      onChildAdded(msgRef,msg=>{
+        const m=msg.val();
+        if(m.sender!==currentUser.uid && currentChatId!==chatId){
+          update(ref(db,"userChats/"+currentUser.uid+"/"+chatId),{unread:true});
+        }
       });
     });
   });
 }
 
-/* service worker registration and permission */
-if("serviceWorker" in navigator){
-  navigator.serviceWorker.register("sw.js").then(() => {
-    if(Notification.permission !== "granted" && Notification.permission !== "denied"){
-      Notification.requestPermission();
-    }
-  }).catch(()=>{});
-}
-
-/* show notification via service worker if available */
-function showNotification(title, body, tag){
-  if(!("Notification" in window)) return;
-
-  if(Notification.permission === "granted" && "serviceWorker" in navigator){
-    navigator.serviceWorker.ready.then(reg => {
-      try {
-        reg.showNotification(title, {
-          body,
-          icon: "https://cdn-icons-png.flaticon.com/512/906/906349.png",
-          tag
-        });
-      } catch(e){}
-    }).catch(()=>{});
-  } else if(Notification.permission !== "denied"){
-    Notification.requestPermission().then(p => {
-      if(p === "granted"){
-        try { new Notification(title, { body, icon: "https://cdn-icons-png.flaticon.com/512/906/906349.png", tag }); } catch(e) {}
-      }
-    });
+/* service worker & notifications */
+if("serviceWorker"in navigator){navigator.serviceWorker.register("sw.js").then(()=>Notification.requestPermission());}
+function showNotification(title,body){
+  if(!("Notification"in window))return;
+  if(Notification.permission==="granted"){
+    navigator.serviceWorker.ready.then(r=>r.showNotification(title,{body,icon:"https://cdn-icons-png.flaticon.com/512/906/906349.png"}));
   }
-}
-
-/* small helper to escape HTML in messages */
-function escapeHtml(s){
-  if(!s) return "";
-  return s.replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;");
 }
 </script>
 </body>
