@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Whisp</title>
 <style>
-  /* --- NEW "SLEEK" DARK MODE STYLES --- */
+  /* --- SLEEK DARK MODE STYLES --- */
   html, body {
     margin: 0;
     padding: 0;
@@ -262,35 +262,41 @@ const loginScreen=document.getElementById("loginScreen"),
 let currentUser=null, currentChatId=null, replyTo=null, currentListenerRef=null;
 let currentChatIsGroup=false, chatMembers={};
 
+// This set tracks which chat message refs we have attached listeners to
 let activeMessageListeners = new Set();
 
+// Helper to switch screens
 const show=(s)=>{[loginScreen,chatListScreen,chatScreen].forEach(e=>e.classList.remove("active"));s.classList.add("active");};
 
-// -- CHANGED: Added username lookup table creation on signup --
+// --- LOGIN HANDLER (SECURITY FIXES APPLIED) ---
 document.getElementById("loginBtn").onclick = async () => {
   const emailVal = document.getElementById("email").value.trim();
   const passwordVal = document.getElementById("password").value.trim();
   const usernameVal = document.getElementById("username").value.trim();
   if(!emailVal || !passwordVal) return alert("Enter credentials.");
+  
   try {
     let cred;
     try {
+      // Attempt login first
       cred = await signInWithEmailAndPassword(auth, emailVal, passwordVal);
-    } catch {
+    } catch (e) {
+      // If login fails, attempt registration
       if(!usernameVal) return alert("Please provide a username for registration.");
+      
       cred = await createUserWithEmailAndPassword(auth, emailVal, passwordVal);
       
       const finalUsername = usernameVal || emailVal.split("@")[0];
+      const uid = cred.user.uid;
       
-      // Set user profile
-      await set(ref(db, "users/" + cred.user.uid), { 
+      // 1. Set user profile
+      await set(ref(db, "users/" + uid), { 
         username: finalUsername, 
         email: emailVal 
       });
       
-      // -- NEW --
-      // Create the username lookup for efficient search
-      await set(ref(db, "usernames/" + finalUsername.toLowerCase()), cred.user.uid);
+      // 2. Create the username lookup. 
+      await set(ref(db, "usernames/" + finalUsername.toLowerCase()), uid);
     }
   } catch (e) {
     alert(e.message);
@@ -314,82 +320,79 @@ onAuthStateChanged(auth, async user => {
   }
 });
 
-// -- CHANGED: Updated to dynamically fetch DM partner's username --
+// --- LOAD CHATS (DM NAMING FIXES APPLIED) ---
 async function loadChats(){
   chatList.innerHTML="";
   const chatsSnap = await get(ref(db,"chats"));
   if(!chatsSnap.exists()) return;
 
   const chats = chatsSnap.val();
-  const chatIds = Object.keys(chats);
-
-  // Use Promise.all to fetch user data in parallel for DMs
-  const chatPromises = chatIds.map(async (id) => {
+  const chatPromises = Object.keys(chats).map(async (id) => {
     const chat = chats[id];
-    if(!chat.members || !chat.members.includes(currentUser.uid)) {
+    
+    // Check membership using Object Map keys
+    if(!chat.members || !chat.members[currentUser.uid]) {
       return null;
     }
 
     let chatName = chat.name;
     const isDM = chat.isGroup === false;
-
-    // -- NEW DM Naming Logic --
-    // If it's a DM, find the *other* user and get their username
-    if (isDM && chat.members.length >= 2) {
-      const otherUid = chat.members.find(uid => uid !== currentUser.uid);
+    
+    // If it's a DM, find the other user and get their username
+    if (isDM) {
+      const memberUids = Object.keys(chat.members);
+      const otherUid = memberUids.find(uid => uid !== currentUser.uid);
       if (otherUid) {
         try {
           const userSnap = await get(ref(db, "users/" + otherUid));
           if (userSnap.exists()) {
-            chatName = userSnap.val().username || "DM"; // Use the other user's username
+            chatName = userSnap.val().username || "DM"; 
           } else {
             chatName = "Deleted User";
           }
         } catch (e) {
-          chatName = chat.name || "DM"; // Fallback to stored name
+          chatName = chat.name || "DM"; 
         }
       }
     }
 
-    return { id, name: chatName }; // Return an object with chat data
+    return { id, name: chatName };
   });
 
-  // Wait for all chat info to be processed
   const chatItems = await Promise.all(chatPromises);
 
   // Now render them
   chatItems.forEach(item => {
-    if (!item) return; // Skip null items (chats user isn't in)
+    if (!item) return; 
     
     const div = document.createElement("div");
     div.className = "chatItem";
     div.dataset.id = item.id;
-    div.textContent = item.name; // Use the dynamic name
-    
-    // Pass the dynamic name to openChat
+    div.textContent = item.name; 
     div.onclick = () => openChat(item.id, item.name); 
     chatList.append(div);
   });
 }
 
+// --- OPEN CHAT (MEMBER ITERATION FIXES APPLIED) ---
 async function openChat(id,name){
   currentChatId=id;
-  document.getElementById("chatName").textContent=name; // This now receives the correct name
+  document.getElementById("chatName").textContent=name;
   messagesDiv.innerHTML="";
-  chatMembers = {}; // Clear old member data
+  chatMembers = {}; 
   show(chatScreen);
 
   if(currentListenerRef){ off(currentListenerRef); currentListenerRef=null; }
 
   const chatSnap=await get(ref(db,"chats/"+id));
-  if (!chatSnap.exists()) return; // Chat was deleted
+  if (!chatSnap.exists()) return;
   
   const chat=chatSnap.val();
   currentChatIsGroup = chat.isGroup || false;
 
-  // load member usernames
+  // load member usernames by iterating over the object map keys
   if(chat.members){
-    for(const uid of chat.members){
+    for(const uid of Object.keys(chat.members)){
       try {
         const uSnap = await get(ref(db,"users/"+uid));
         if(uSnap.exists()) chatMembers[uid] = uSnap.val().username || "Unknown";
@@ -399,11 +402,13 @@ async function openChat(id,name){
     }
   }
 
+  // mark messages as read and set lastRead
   await update(ref(db,"userChats/"+currentUser.uid+"/"+id), {
     unread: false,
     lastRead: Date.now()
   });
 
+  // close any existing system notifications
   if("serviceWorker" in navigator){
     navigator.serviceWorker.getRegistration().then(reg=>{
       if(!reg) return;
@@ -418,6 +423,7 @@ async function openChat(id,name){
   onChildAdded(msgRef,s=>renderMessage(s.val()));
 }
 
+// --- RENDER MESSAGE (SWIPE TO REPLY ADDED) ---
 function renderMessage(m){
   const div=document.createElement("div");
   div.classList.add("msg",m.sender===currentUser.uid?"me":"them");
@@ -443,9 +449,39 @@ function renderMessage(m){
   messagesDiv.append(div);
   messagesDiv.scrollTop=messagesDiv.scrollHeight;
 
-  // Long-press or click for reply
-  div.addEventListener("click", () => showReplyBar(m.text));
-  // Removed touch-swipe to simplify and avoid conflicts
+  // --- SWIPE TO REPLY LOGIC ---
+  div.addEventListener("touchstart", e => {
+    // Only track if a single finger is used
+    if (e.touches.length === 1) {
+      div.startX = e.touches[0].clientX;
+      div.isDragging = false;
+    }
+  });
+  
+  div.addEventListener("touchmove", e => {
+    if (!div.startX) return;
+    const diff = e.touches[0].clientX - div.startX;
+    
+    // Check for a minimum horizontal drag distance
+    if (diff > 70) {
+      div.isDragging = true;
+    }
+  });
+
+  div.addEventListener("touchend", () => {
+    if (div.isDragging) {
+      showReplyBar(m.text);
+      div.isDragging = false;
+    }
+    div.startX = null;
+  });
+  
+  // Also allow a quick click/tap to initiate a reply
+  div.addEventListener("click", () => {
+      // Prevent accidental click reply if a drag just ended
+      if (!div.isDragging) showReplyBar(m.text);
+  });
+  // --- END SWIPE TO REPLY LOGIC ---
 }
 
 function showReplyBar(text){
@@ -471,7 +507,7 @@ document.getElementById("sendBtn").onclick=async()=>{
 document.getElementById("backBtn").onclick=()=>{
   currentChatId=null;
   if(currentListenerRef){off(currentListenerRef); currentListenerRef=null;}
-  loadChats(); // Reload chats in case unread status changed
+  loadChats(); 
   show(chatListScreen);
 };
 
@@ -481,17 +517,17 @@ document.getElementById("logoutBtn").onclick=async()=>{
   show(loginScreen);
 };
 
-// -- CHANGED: Uses new /usernames lookup for efficiency --
+// --- GROUP BUTTON (OBJECT MAP FIXES APPLIED) ---
 document.getElementById("groupBtn").onclick=async()=>{
   const name=prompt("Group name:");
   if(!name)return;
   const input=prompt("Enter usernames (comma-separated):");
   const usernames=input?input.split(",").map(u=>u.trim().toLowerCase()):[];
-  if (usernames.length === 0) return;
+  if (usernames.length === 0) return alert("Group must have members.");
 
   const memberIds=[currentUser.uid];
   
-  // Look up each user one by one
+  // Look up each user
   for (const uname of usernames) {
     try {
       const userSnap = await get(ref(db, "usernames/" + uname));
@@ -501,23 +537,29 @@ document.getElementById("groupBtn").onclick=async()=>{
           memberIds.push(uid);
         }
       } else {
-        alert(`User "${uname}" not found. Skipping.`);
+        console.warn(`User "${uname}" not found. Skipping.`);
       }
     } catch (e) {
       console.warn("Error looking up user:", uname, e);
     }
   }
   
-  if (memberIds.length < 2) return alert("Could not find any valid users to add.");
+  if (memberIds.length < 2) return alert("Could not find any other valid users to add.");
+
+  // Convert the memberIds array to the required object map
+  const newMembersMap = memberIds.reduce((map, uid) => {
+      map[uid] = true;
+      return map;
+  }, {});
 
   const refNew=push(ref(db,"chats"));
   await set(refNew,{
     name,
     isGroup:true,
-    members:memberIds
+    members:newMembersMap
   });
   
-  // -- NEW -- Store chat metadata for all members
+  // Store chat metadata for all members
   const userChatUpdates = {};
   memberIds.forEach(uid => {
     userChatUpdates[`/userChats/${uid}/${refNew.key}`] = { name: name, isGroup: true };
@@ -527,7 +569,7 @@ document.getElementById("groupBtn").onclick=async()=>{
   loadChats();
 };
 
-// -- CHANGED: Uses new /usernames lookup for efficiency --
+// --- DM BUTTON (OBJECT MAP FIXES APPLIED) ---
 document.getElementById("dmBtn").onclick=async()=>{
   const uname = prompt("Username to DM:");
   if (!uname) return;
@@ -545,31 +587,35 @@ document.getElementById("dmBtn").onclick=async()=>{
       return alert("You can't DM yourself!");
     }
 
-    // 2. Create the chat
+    // 2. Create the chat using Object Map for members
     const refNew = push(ref(db, "chats"));
-    // Note: The 'name' here is a fallback. The `loadChats` function
-    // will dynamically find the correct username anyway.
+    const newMembersMap = { [currentUser.uid]: true, [uid]: true };
+    
     await set(refNew, {
-      name: uname, // Fallback name
+      name: uname, 
       isGroup: false,
-      members: [currentUser.uid, uid]
+      members: newMembersMap
     });
     
-    // -- NEW -- Store chat metadata for both members
+    // 3. Store chat metadata for both members
+    const currentUserSnap = await get(ref(db, "users/" + currentUser.uid));
+    const currentUsername = currentUserSnap.val() ? currentUserSnap.val().username : "User";
+
     await update(ref(db), {
       [`/userChats/${currentUser.uid}/${refNew.key}`]: { name: uname, isGroup: false },
-      [`/userChats/${uid}/${refNew.key}`]: { name: auth.currentUser.displayName || "User", isGroup: false } // Need to get current user's name
+      [`/userChats/${uid}/${refNew.key}`]: { name: currentUsername, isGroup: false } 
     });
 
     loadChats();
 
   } catch (e) {
-    alert("Error finding user: " + e.message);
+    alert("Error creating DM: " + e.message);
   }
 };
 
-// Fixed unread and notification logic
+// --- LISTEN FOR UNREAD (MEMBERSHIP CHECK FIXES APPLIED) ---
 function listenForUnread(){
+  // watch userChats to update UI unread markers
   const userChatsRef = ref(db,"userChats/"+currentUser.uid);
   onValue(userChatsRef,snap=>{
     if(!snap.exists()) return;
@@ -584,12 +630,15 @@ function listenForUnread(){
     });
   });
 
+  // iterate chats once and attach one message listener per chat
   onValue(ref(db,"chats"), snap => {
     if(!snap.exists()) return;
     snap.forEach(chatSnap => {
       const chatId = chatSnap.key;
       const chat = chatSnap.val();
-      if(!chat.members || !chat.members.includes(currentUser.uid)) return;
+      
+      // Check membership using Object Map keys
+      if(!chat.members || !chat.members[currentUser.uid]) return;
 
       if(activeMessageListeners.has(chatId)) return;
       activeMessageListeners.add(chatId);
@@ -597,15 +646,20 @@ function listenForUnread(){
       const msgRef = ref(db,"chats/"+chatId+"/messages");
       onChildAdded(msgRef, msgSnap => {
         const m = msgSnap.val();
-        if(!m || !m.sender) return; // Malformed message
-        if(m.sender === currentUser.uid) return;
 
+        // ignore our own messages
+        if(!m || !m.sender || m.sender === currentUser.uid) return;
+
+        // check user's lastRead for this chat
         get(ref(db,"userChats/"+currentUser.uid+"/"+chatId)).then(userChatSnap=>{
           const data = userChatSnap.val() || {};
           const lastRead = data.lastRead || 0;
 
+          // only mark unread and notify if message is newer than lastRead and chat not open
           if(m.time > lastRead && currentChatId !== chatId){
             update(ref(db,"userChats/"+currentUser.uid+"/"+chatId),{ unread:true });
+
+            // show push notification
             showNotification(chat.name || "New message", m.text, chatId);
           }
         }).catch(()=>{});
@@ -614,6 +668,7 @@ function listenForUnread(){
   });
 }
 
+// service worker registration and permission
 if("serviceWorker" in navigator){
   navigator.serviceWorker.register("sw.js").then(()=> {
     if(Notification.permission !== "granted" && Notification.permission !== "denied"){
